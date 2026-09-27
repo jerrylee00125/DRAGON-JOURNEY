@@ -11,7 +11,7 @@
 ## 開始遊玩
 
 <p>
-  <a href="https://jerrylee00125.github.io/PRISM_SPRINT/"><strong>立即開啟遊戲</strong></a>
+  <a href="https://jerrylee00125.github.io/PRISM_SPRINT/"><strong>點我立即開啟遊戲</strong></a>
 </p>
 
 ## 操作方式
