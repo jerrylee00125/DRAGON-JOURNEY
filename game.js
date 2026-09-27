@@ -22,10 +22,10 @@
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
     const colors = ["#ff776e", "#ffbf70", "#ffe587", "#8ee5a5", "#71dce5", "#9fb6fb"];
     const skins = [
-      { id: "prism", name: "虹光龍", ability: "虹彩衝刺", hint: "跑速提高 10%，持續 2.5 秒", cooldown: 18, duration: 2.5, bodyA: "#b2f4ce", bodyB: "#55c9bd", tail: "#47b9b6", snout: "#69d4c5", legs: "#357f99", spikes: colors },
-      { id: "cloud", name: "雲翼龍", ability: "雲端二段跳", hint: "空中再跳一次，躍過危險", cooldown: 18, duration: 0, bodyA: "#c8e7ff", bodyB: "#83b8f5", tail: "#7aa8db", snout: "#a8d4fb", legs: "#5878c4", spikes: ["#f9faff", "#d3e4ff", "#a6c7f9", "#edf3ff", "#b2c6f3"] },
-      { id: "shield", name: "星盾龍", ability: "星光護盾", hint: "3 秒內抵擋一次碰撞", cooldown: 24, duration: 3, bodyA: "#e1b7f8", bodyB: "#a588df", tail: "#9475c3", snout: "#c4a4eb", legs: "#745caa", spikes: ["#fff0b4", "#ffd3e3", "#ded0ff", "#a9b8ff", "#ffe1a4"] },
-      { id: "aurora", name: "極光龍", ability: "極光緩速", hint: "場景放慢至 75%，持續 2.5 秒", cooldown: 24, duration: 2.5, bodyA: "#9cf3e0", bodyB: "#6b97df", tail: "#6c9ac4", snout: "#9dccdc", legs: "#536daf", spikes: ["#9df2d8", "#79e0d8", "#a9b9fc", "#d9a7f0", "#b7f9d4"] }
+      { id: "prism", name: "虹光龍", ability: "虹彩衝刺", hint: "跑速提高 10%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#b2f4ce", bodyB: "#55c9bd", tail: "#47b9b6", snout: "#69d4c5", legs: "#357f99", spikes: colors },
+      { id: "cloud", name: "雲翼龍", ability: "雲端二段跳", hint: "空中再跳一次，躍過危險", cooldown: 5, duration: 0, bodyA: "#c8e7ff", bodyB: "#83b8f5", tail: "#7aa8db", snout: "#a8d4fb", legs: "#5878c4", spikes: ["#f9faff", "#d3e4ff", "#a6c7f9", "#edf3ff", "#b2c6f3"] },
+      { id: "shield", name: "星盾龍", ability: "星光護盾", hint: "3 秒內抵擋一次碰撞", cooldown: 5, duration: 3, bodyA: "#e1b7f8", bodyB: "#a588df", tail: "#9475c3", snout: "#c4a4eb", legs: "#745caa", spikes: ["#fff0b4", "#ffd3e3", "#ded0ff", "#a9b8ff", "#ffe1a4"] },
+      { id: "aurora", name: "極光龍", ability: "極光緩速", hint: "場景放慢至 75%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#9cf3e0", bodyB: "#6b97df", tail: "#6c9ac4", snout: "#9dccdc", legs: "#536daf", spikes: ["#9df2d8", "#79e0d8", "#a9b9fc", "#d9a7f0", "#b7f9d4"] }
     ];
     const achievementDefs = [
       { id: "first100", name: "虹光起跑", description: "單局達 100 分", goal: 100, reward: "解鎖雲翼龍", icon: "🌈" },
