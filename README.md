@@ -10,7 +10,9 @@
 
 ## 開始遊玩
 
-下載整個資料夾後，直接用瀏覽器開啟 `index.html` 即可遊玩，不需要安裝或連線。若要放上 GitHub Pages，請將 `index.html`、`game.js` 和 `assets` 資料夾一起放在發布目錄的最上層。
+<p>
+  <a href="https://jerrylee00125.github.io/PRISM_SPRINT/"><strong>立即開啟遊戲</strong></a>
+</p>
 
 ## 操作方式
 
