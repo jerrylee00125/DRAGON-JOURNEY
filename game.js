@@ -19,6 +19,11 @@
     const speedEl = document.getElementById("speed");
     const sceneEl = document.getElementById("sceneName");
     const skillStatusEl = document.getElementById("skillStatus");
+    const skillNameEl = document.getElementById("skillName");
+    const skillRemainingEl = document.getElementById("skillRemaining");
+    const skillProgressEl = document.getElementById("skillProgress");
+    const skillFillEl = document.getElementById("skillFill");
+    const skillEffectEl = document.getElementById("skillEffect");
     const skillButton = document.getElementById("skillButton");
     const toastEl = document.getElementById("achievementToast");
     const skinGrid = document.getElementById("skinGrid");
@@ -27,11 +32,11 @@
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
     const colors = ["#d8ecb2", "#a5d7bd", "#e8d59b", "#90bfae", "#d5e5cd"];
     const skins = [
-      { id: "prism", name: "青嵐龍", ability: "凌風身法", hint: "跑速提高 10%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#c3e2bc", bodyB: "#6fac92", tail: "#548d78", snout: "#8bc9a4", legs: "#44695b", spikes: colors },
-      { id: "cloud", name: "雲翼龍", ability: "雲端二段跳", hint: "空中再跳一次，躍過危險", cooldown: 5, duration: 0, bodyA: "#c8e7ff", bodyB: "#83b8f5", tail: "#7aa8db", snout: "#a8d4fb", legs: "#5878c4", spikes: ["#f9faff", "#d3e4ff", "#a6c7f9", "#edf3ff", "#b2c6f3"] },
-      { id: "shield", name: "星盾龍", ability: "星光護盾", hint: "3 秒內抵擋一次碰撞", cooldown: 5, duration: 3, bodyA: "#e1b7f8", bodyB: "#a588df", tail: "#9475c3", snout: "#c4a4eb", legs: "#745caa", spikes: ["#fff0b4", "#ffd3e3", "#ded0ff", "#a9b8ff", "#ffe1a4"] },
-      { id: "aurora", name: "極光龍", ability: "極光緩速", hint: "場景放慢至 75%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#9cf3e0", bodyB: "#6b97df", tail: "#6c9ac4", snout: "#9dccdc", legs: "#536daf", spikes: ["#9df2d8", "#79e0d8", "#a9b9fc", "#d9a7f0", "#b7f9d4"] },
-      { id: "godzilla", name: "哥吉拉", ability: "光速破壞", hint: "清除畫面內前方所有障礙", cooldown: 5, duration: 0, bodyA: "#444b4d", bodyB: "#171c20", tail: "#202629", snout: "#30383a", legs: "#11171b", spikes: ["#dcf9cd", "#b4e6c3", "#93d4c1", "#c8edbb", "#e5f7d4"] }
+      { id: "prism", name: "青嵐龍", ability: "凌風身法", hint: "跑速提高 10%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#c3e2bc", bodyB: "#6fac92", tail: "#548d78", snout: "#8bc9a4", legs: "#44695b", belly: "#e1f0cf", trim: "#e9d59a", spikes: colors },
+      { id: "cloud", name: "雲翼龍", ability: "雲端二段跳", hint: "空中再跳一次，躍過危險", cooldown: 5, duration: 0, bodyA: "#c8e7ff", bodyB: "#83b8f5", tail: "#7aa8db", snout: "#a8d4fb", legs: "#5878c4", belly: "#eaf6fb", trim: "#f8fbf4", spikes: ["#f9faff", "#d3e4ff", "#a6c7f9", "#edf3ff", "#b2c6f3"] },
+      { id: "shield", name: "星盾龍", ability: "星光護盾", hint: "3 秒內抵擋一次碰撞", cooldown: 5, duration: 3, bodyA: "#e1b7f8", bodyB: "#a588df", tail: "#9475c3", snout: "#c4a4eb", legs: "#745caa", belly: "#ead8f6", trim: "#ffe3a1", spikes: ["#fff0b4", "#ffd3e3", "#ded0ff", "#a9b8ff", "#ffe1a4"] },
+      { id: "aurora", name: "極光龍", ability: "極光緩速", hint: "場景放慢至 75%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#9cf3e0", bodyB: "#6b97df", tail: "#6c9ac4", snout: "#9dccdc", legs: "#536daf", belly: "#bce9e8", trim: "#e3f8dc", spikes: ["#9df2d8", "#79e0d8", "#a9b9fc", "#d9a7f0", "#b7f9d4"] },
+      { id: "godzilla", name: "哥吉拉", ability: "光速破壞", hint: "清除畫面內前方所有障礙", cooldown: 5, duration: 0, bodyA: "#444b4d", bodyB: "#171c20", tail: "#202629", snout: "#30383a", legs: "#11171b", spikes: ["#e8e9e3", "#c8cfca", "#f1f0e8", "#aebbb6", "#d9ded8"] }
     ];
     const achievementDefs = [
       { id: "first100", name: "初入江湖", description: "單局達 100 分", goal: 100, reward: "解鎖雲翼龍", icon: "🎋" },
@@ -59,6 +64,7 @@
     const player = { x: 0, jump: 0, velocity: 0, duck: false };
     let state = "ready";
     let elapsed = 0;
+    let pausedHeroTailSway = 0;
     let distance = 0;
     let progress = 0;
     let speed = 0;
@@ -177,13 +183,62 @@
       saveProgress();
     }
     function skinPortrait(skin) {
-      const crest = skin.id === "godzilla" ? '<path d="m17 32-7-10 13 3Zm10-7-2-15 11 10Zm10-5 6-12 7 17Z" fill="#c9edc7"/>' :
-        `<path d="m19 32-4-7 8 3Z" fill="${skin.spikes[0]}"/><path d="m27 26-1-8 8 5Z" fill="${skin.spikes[1]}"/><path d="m37 22 4-8 5 10Z" fill="${skin.spikes[2]}"/>`;
-      const outline = skin.id === "godzilla" ? ' stroke="#91a09b" stroke-width="1.5"' : "";
-      const band = skin.id === "godzilla" ? "#a6b8ad" : "#e9cc91";
-      const eye = skin.id === "godzilla" ? "#f4d599" : "#1d3150";
-      const detail = skin.id === "godzilla" ? '<path d="M17 42c3-9 9-12 17-11-2 6-1 10 5 15H24Z" fill="#3c4547"/><path d="M30 25h14l3 6H29Z" fill="#515b5c"/><path d="m16 43-10-6c3 5 7 8 12 9Z" fill="#4a5454"/>' : "";
-      return `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 43 5 36c2 7 6 10 13 11l-2 7h9l3-8h14l-2 8h9l2-13c4-3 6-8 4-14l-8-1-4-8H30l-4 8c-6 2-10 8-10 17Z" fill="${skin.bodyB}"${outline}/>${detail}${crest}<path d="M38 26h16" stroke="${band}" stroke-width="3" stroke-linecap="round"/><circle cx="46" cy="31" r="2.5" fill="${eye}"/><path d="M40 40h15" stroke="${skin.snout}" stroke-width="3" stroke-linecap="round"/></svg>`;
+      if (skin.id === "godzilla") {
+        return `<svg viewBox="-33 -81 103 83" aria-hidden="true">
+          <path d="M14-40C2-36-7-33-15-26c-6 6-12 9-17 10 10 2 18-2 26-7L18-22Z" fill="#22292c" stroke="#87918f" stroke-width="1.8"/>
+          <path d="m-17-27 1-11 7 9 3-14 9 12 3-21 10 14 3-28 9 18 7-29 7 22 6-16 6 20-7 10Z" fill="#d4d7d2" stroke="#354043" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M34-28q12-3 14 9l-4 7 4 5 5 3 1 4H37l-2-7-5-8q-1-8 4-13Z" fill="#1a2225" stroke="#697773" stroke-width="1.6"/>
+          <path d="M10-39c3-16 14-25 30-22 8 2 13 10 13 21l-2 15c-2 8-7 12-15 14H27c-9-4-15-10-18-19-2-5-1-7 1-9Z" fill="#30393c" stroke="#9ba8a4" stroke-width="2"/>
+          <path d="M30-43q9 1 14 8l-1 11q-3 8-9 12l-8-5q-5-6-4-13 2-9 8-13Z" fill="#4d585a"/>
+          <path d="M15-26q12-4 15 9l-4 5 1 5 6 3 1 4H17l-3-6-4-8q-1-8 5-12Z" fill="#273034" stroke="#91a09a" stroke-width="1.6"/>
+          <path d="m27-1 3 1m-9-1 3 1m23-1 3 1" stroke="#d7dad2" stroke-width="1.3"/>
+          <path d="M42-60c5-8 16-10 22-4l4 9-3 6 3 2-3 5H54l-9-4-5-8Z" fill="#394246" stroke="#a7b2ae" stroke-width="1.8"/>
+          <path d="M48-43c5 2 11 3 17 1l-5 5-10-2Z" fill="#242c2f" stroke="#899691" stroke-width="1.2"/>
+          <path d="M43-37c6-3 9 1 8 6l-4 5 5 3-3 3-8-5-3-9Z" fill="#222a2d" stroke="#8c9a95" stroke-width="1.4"/>
+          <path d="m49-22 3 3 3-2" fill="none" stroke="#e1e3db" stroke-width="1.6"/>
+          <path d="M48-59q8-5 13-1" fill="none" stroke="#aab7af" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="57" cy="-55" r="2.1" fill="#edcf94"/>
+          <path d="M56-47h10" stroke="#c5cbc3" stroke-width="1.5"/>
+        </svg>`;
+      }
+      const back = skin.id === "prism"
+        ? `<path d="M7-43q-3-12 7-17 2 12-5 17Zm11-5q-2-15 9-20 1 12-7 20Zm13-4q1-13 11-16-2 12-9 17Z" fill="${skin.spikes[0]}" stroke="#5b9779" stroke-width="1.5"/>`
+        : skin.id === "cloud"
+          ? `<path d="M5-43q-1-14 9-19 3 13-6 20Zm12-6q0-15 10-21 3 13-7 22Zm13-4q3-13 13-16 1 12-9 18Z" fill="#f1f8fb" stroke="#8caed7" stroke-width="1.5"/>`
+          : skin.id === "shield"
+            ? `<path d="m6-42 2-14 8 6-1 10Zm12-7 4-18 9 10-3 11Zm13-5 7-14 7 12-7 7Z" fill="#e2c9f2" stroke="#f7dfaa" stroke-width="2" stroke-linejoin="round"/>`
+            : `<path d="M6-42q-2-15 8-22 4 13-4 22Zm11-8q1-16 12-21 3 15-8 22Zm13-5q4-13 14-15 0 14-10 18Z" fill="#b9f3e5" stroke="#8eb2e6" stroke-width="2"/>`;
+      const outfit = skin.id === "prism"
+        ? `<path d="M43-56Q28-59 13-54l10 3-11 4q17-2 31-5Z" fill="#e8d59b" stroke="#5f9d79" stroke-width="1.2"/><path d="m14-51-13-8 5 10Z" fill="#e8d59b"/>`
+        : skin.id === "cloud"
+          ? `<path d="M19-43Q28-49 39-42L35-25 12-28Z" fill="#ecf6fb" stroke="#86b4dd" stroke-width="1.5"/><path d="M42-63q1-10 9-10 2 8-6 13Z" fill="#f8fbff" stroke="#89aed7" stroke-width="1.2"/><path d="m-13-27-8-7 10 3Z" fill="#edf8fc"/>`
+          : skin.id === "shield"
+            ? `<path d="M34-45 44-42 46-31 37-26 30-35Z" fill="#8067ae" stroke="#ffe3a1" stroke-width="2"/><path d="M46-63h16" stroke="#ffe3a1" stroke-width="3"/>`
+            : `<path d="M19-45Q29-50 40-42L35-21 11-28Z" fill="#80bcd6" stroke="#d9f7e9" stroke-width="1.6"/><path d="M18-42q12 4 18 15" fill="none" stroke="#bbf6e7" stroke-width="2"/><path d="M44-63q5-9 12-9-2 9-8 13Z" fill="#d9b7ef" stroke="#9de9df" stroke-width="1.2"/>`;
+      const badge = skin.id === "shield"
+        ? `<path d="m24-35 2 5 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1Z" fill="#fff0b6"/>` : "";
+      const headwear = skin.id === "prism"
+        ? `<path d="M42-61h20" stroke="#f1da9e" stroke-width="3"/><path d="m43-61-15-4 7 6Z" fill="#e7d392"/>`
+        : skin.id === "cloud"
+          ? `<path d="M42-64q-3-11 7-11 4 7-2 13Z" fill="#f7fbfc" stroke="#8fb9df" stroke-width="1.3"/>`
+          : skin.id === "shield"
+            ? `<path d="M43-63h19" stroke="#ffe3a1" stroke-width="3"/><path d="m48-64 4-7 4 8Z" fill="#fff1ba"/>`
+            : `<path d="M43-65q5-11 13-11-2 9-8 14Z" fill="#d8b6ed" stroke="#c6f7e8" stroke-width="1.4"/>`;
+      return `<svg viewBox="-20 -74 90 76" aria-hidden="true">
+        <path d="M13-39Q-1-40-18-21q10-1 20 3l18-3Z" fill="${skin.tail}" stroke="${skin.legs}" stroke-width="1.5"/>
+        ${back}
+        <path d="M32-20q7-4 11 2l-1 11 9 4 1 3H36l-2-8Z" fill="${skin.legs}"/>
+        <path d="M8-42q5-16 24-15 17 1 19 21l-2 15q-5 11-19 11H18Q5-16 6-29Z" fill="${skin.bodyB}" stroke="${skin.legs}" stroke-width="1.7"/>
+        ${outfit}
+        <path d="M28-41q11 2 12 13l-5 13-9-2q-6-7-5-14Z" fill="${skin.belly}" opacity=".84"/>
+        ${badge}
+        <path d="M14-23q10-4 14 4l-1 12 8 4 1 3H19l-3-8-6-5Z" fill="${skin.legs}" stroke="${skin.tail}" stroke-width="1.3"/>
+        <path d="M37-59q5-8 16-7 11 1 12 11l-2 6 5 4-3 5H47l-8-6Z" fill="${skin.bodyA}" stroke="${skin.legs}" stroke-width="1.7"/>
+        ${headwear}
+        <path d="M43-39q8-3 10 5l-4 6 4 2-3 2-9-5Z" fill="${skin.bodyB}" stroke="${skin.legs}" stroke-width="1.2"/>
+        <circle cx="55" cy="-55" r="2.5" fill="#1d3150"/>
+        <path d="M55-43h11" stroke="${skin.snout}" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>`;
     }
     function renderSkins() {
       skinGrid.innerHTML = skins.map(skin => {
@@ -220,23 +275,39 @@
     }
 
     function formatted(value) { return String(value).padStart(4, "0"); }
+    function updateSkillMeter() {
+      const skin = currentSkin();
+      const ready = skillCooldown <= 0;
+      const airborne = player.jump > 0 || player.velocity > 0;
+      const canUse = ready && (skin.id !== "cloud" || (airborne && !doubleJumpUsed));
+      const seconds = (Math.ceil(skillCooldown * 10) / 10).toFixed(1);
+      const remaining = ready ? "可使用" : `CD ${seconds} 秒`;
+      const groundCloud = ready && skin.id === "cloud" && !canUse;
+      const percent = ready ? 100 : Math.max(0, Math.min(99, Math.floor((1 - skillCooldown / skin.cooldown) * 100)));
+      const effect = skillActive > 0 ? `發動中 ${skillActive.toFixed(1)} 秒` : "";
+      const usable = canUse && state === "running";
+      const statusClass = `skill-badge${effect ? " active" : ready ? " ready" : ""}${usable ? " usable" : ""}`;
+      if (skillStatusEl.className !== statusClass) skillStatusEl.className = statusClass;
+      skillNameEl.textContent = skin.ability;
+      skillRemainingEl.textContent = groundCloud ? "空中發動" : remaining;
+      skillEffectEl.textContent = effect;
+      skillFillEl.style.width = `${percent}%`;
+      skillProgressEl.setAttribute("aria-label", `${skin.ability}冷卻進度`);
+      skillProgressEl.setAttribute("aria-valuenow", String(percent));
+      skillProgressEl.setAttribute("aria-valuetext", ready
+        ? (groundCloud ? "冷卻完成，空中發動" : "冷卻完成，可使用")
+        : `冷卻剩餘 ${seconds} 秒，進度 ${percent}%`);
+      skillButton.classList.toggle("skill-ready", usable);
+      skillButton.disabled = !usable;
+      skillButton.setAttribute("aria-label", `${skin.ability}，${groundCloud ? "空中發動" : remaining}${effect ? `，${effect}` : ""}`);
+    }
     function updateHud() {
       scoreEl.textContent = formatted(score);
       bestEl.textContent = formatted(best);
       const speedRatio = speed / Math.max(world.baseSpeed, 1);
       speedEl.textContent = `×${speedRatio > 2.5 ? speedRatio.toFixed(2) : speedRatio.toFixed(1)}`;
       sceneEl.textContent = scenes[sceneIndex].name;
-      const skin = currentSkin();
-      const active = skillActive > 0;
-      const ready = skillCooldown <= 0;
-      const canUse = ready && (skin.id !== "cloud" || ((player.jump > 0 || player.velocity > 0) && !doubleJumpUsed));
-      skillStatusEl.className = `skill-badge ${active ? "active" : ready ? "ready" : ""}`;
-      skillStatusEl.textContent = active ? `${skin.ability} · ${skillActive.toFixed(1)} 秒` :
-        ready ? (skin.id === "cloud" && !canUse ? `${skin.ability} · 空中發動` : `${skin.ability} · 已就緒`) :
-          `${skin.ability} · ${skillCooldown.toFixed(1)} 秒`;
-      skillButton.classList.toggle("skill-ready", canUse && state === "running");
-      skillButton.disabled = state !== "running" || !canUse;
-      skillButton.setAttribute("aria-label", `${skin.ability}，${skillStatusEl.textContent}`);
+      updateSkillMeter();
     }
     function updateAudioButtons() {
       for (const [button, name, icon, enabled] of [
@@ -402,6 +473,7 @@
     }
     function resetRun() {
       elapsed = 0; distance = 0; progress = 0; score = 0; spawnTimer = 1.65;
+      pausedHeroTailSway = 0;
       obstacles = []; keys.clear();
       sceneIndex = 0; pendingSceneIndex = null; previousSceneIndex = null; sceneFadeRemaining = 0;
       player.jump = 0; player.velocity = 0; player.duck = false;
@@ -420,6 +492,7 @@
     }
     function pauseGame() {
       if (state !== "running") return;
+      pausedHeroTailSway = heroTailSway();
       state = "paused"; player.duck = false; keys.clear();
       stopMusic();
       pauseButton.textContent = "繼續"; setOverlay("paused"); updateHud();
@@ -446,6 +519,7 @@
       player.velocity = 680;
       doubleJumpUsed = false;
       playJump();
+      updateSkillMeter();
     }
     function activateSkill() {
       if (state !== "running" || skillCooldown > 0) return false;
@@ -568,6 +642,7 @@
       if (state === "running") checkAchievements();
       if (Math.floor(elapsed) !== Math.floor(elapsed - dt)) renderAchievements();
       if (score !== previousScore || Math.floor(elapsed * 3) !== Math.floor((elapsed - dt) * 3)) updateHud();
+      else updateSkillMeter();
     }
 
     function roundRect(x, y, width, height, radius, fill, stroke) {
@@ -925,6 +1000,545 @@
       ctx.fillText(airborne ? "↓" : "↑", world.width - 21, y + 15);
       ctx.restore();
     }
+    function drawGodzillaPlate(points) {
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (const [x, y] of points.slice(1)) ctx.lineTo(x, y);
+      ctx.closePath();
+      ctx.fillStyle = "#d4d7d2";
+      ctx.strokeStyle = "#344044";
+      ctx.lineWidth = 1.7;
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#f0f0e9";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(points[0][0] + 1, points[0][1] - 2);
+      ctx.lineTo(points[1][0], points[1][1] + 3);
+      ctx.stroke();
+    }
+    function godzillaTailSway() {
+      return player.jump === 0 && player.velocity === 0 && !player.duck && !reducedMotion.matches
+        ? Math.sin(elapsed * 6) * 3 : 0;
+    }
+    function drawGodzillaLeg(left, lift, rear, tucked) {
+      const footY = tucked ? -3 : 0;
+      ctx.save();
+      ctx.translate(0, -lift);
+      ctx.fillStyle = rear ? "#1a2225" : "#273034";
+      ctx.strokeStyle = rear ? "#697773" : "#91a09a";
+      ctx.lineWidth = 1.7;
+      ctx.beginPath();
+      ctx.moveTo(left + 3, -25);
+      ctx.quadraticCurveTo(left + 14, -29, left + 17, -18);
+      ctx.lineTo(left + 14, -12);
+      ctx.quadraticCurveTo(left + 9, -10, left + 12, -7);
+      ctx.lineTo(left + 21, footY - 4);
+      ctx.quadraticCurveTo(left + 24, footY - 3, left + 24, footY);
+      ctx.lineTo(left + 7, footY);
+      ctx.quadraticCurveTo(left + 3, footY - 2, left + 3, footY - 5);
+      ctx.lineTo(left + 1, -13);
+      ctx.quadraticCurveTo(left - 2, -21, left + 3, -25);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = rear ? "#303a3d" : "#485255";
+      ctx.beginPath();
+      ctx.moveTo(left + 3, -21);
+      ctx.quadraticCurveTo(left + 11, -25, left + 14, -17);
+      ctx.lineTo(left + 9, -13);
+      ctx.lineTo(left + 3, -16);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#d7dad2";
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(left + 15, footY - 1); ctx.lineTo(left + 18, footY);
+      ctx.moveTo(left + 20, footY - 1); ctx.lineTo(left + 23, footY);
+      ctx.stroke();
+      ctx.restore();
+    }
+    function drawGodzillaCrouchLeg(left, rear) {
+      ctx.fillStyle = rear ? "#1a2225" : "#273034";
+      ctx.strokeStyle = rear ? "#697773" : "#91a09a";
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(left + 2, -15);
+      ctx.quadraticCurveTo(left + 12, -18, left + 16, -11);
+      ctx.lineTo(left + 11, -7);
+      ctx.lineTo(left + 21, -4);
+      ctx.lineTo(left + 23, 0);
+      ctx.lineTo(left + 5, 0);
+      ctx.lineTo(left + 4, -4);
+      ctx.lineTo(left - 1, -7);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#d7dad2";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(left + 15, -1); ctx.lineTo(left + 18, 0);
+      ctx.moveTo(left + 20, -1); ctx.lineTo(left + 22, 0);
+      ctx.stroke();
+    }
+    function drawGodzilla() {
+      ctx.save();
+      ctx.lineJoin = "round";
+      const body = ctx.createLinearGradient(4, -66, 57, -7);
+      body.addColorStop(0, "#596164");
+      body.addColorStop(.44, "#333b3e");
+      body.addColorStop(1, "#171c20");
+      if (player.duck) {
+        // 蹲姿保留背鰭輪廓，同時讓頭部與身體貼近跑道。
+        ctx.fillStyle = "#20272a";
+        ctx.strokeStyle = "#889591";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(12, -24);
+        ctx.bezierCurveTo(-2, -24, -10, -18, -25, -9);
+        ctx.quadraticCurveTo(-16, -8, -7, -12);
+        ctx.quadraticCurveTo(2, -10, 14, -11);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        for (const plate of [
+          [[-14, -20], [-14, -29], [-8, -23]],
+          [[-6, -25], [-3, -36], [3, -27]],
+          [[3, -29], [8, -42], [15, -30]],
+          [[14, -31], [22, -44], [27, -31]],
+          [[27, -31], [33, -40], [37, -29]]
+        ]) drawGodzillaPlate(plate);
+        drawGodzillaCrouchLeg(8, true);
+        ctx.fillStyle = body;
+        ctx.strokeStyle = "#9aa6a1";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(4, -20);
+        ctx.bezierCurveTo(8, -32, 23, -35, 38, -29);
+        ctx.quadraticCurveTo(51, -27, 55, -19);
+        ctx.lineTo(50, -12);
+        ctx.quadraticCurveTo(44, -5, 34, -6);
+        ctx.lineTo(18, -6);
+        ctx.quadraticCurveTo(6, -8, 4, -20);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#4a5557";
+        ctx.beginPath();
+        ctx.moveTo(18, -26);
+        ctx.quadraticCurveTo(28, -29, 37, -24);
+        ctx.lineTo(41, -18);
+        ctx.quadraticCurveTo(38, -11, 32, -8);
+        ctx.lineTo(24, -10);
+        ctx.quadraticCurveTo(20, -16, 18, -26);
+        ctx.closePath(); ctx.fill();
+        drawGodzillaCrouchLeg(32, false);
+        ctx.fillStyle = "#30393c";
+        ctx.strokeStyle = "#a8b2ac";
+        ctx.beginPath();
+        ctx.moveTo(43, -27);
+        ctx.quadraticCurveTo(47, -35, 55, -33);
+        ctx.lineTo(61, -30);
+        ctx.lineTo(64, -25);
+        ctx.lineTo(62, -22);
+        ctx.lineTo(66, -20);
+        ctx.lineTo(64, -17);
+        ctx.lineTo(55, -17);
+        ctx.quadraticCurveTo(48, -19, 44, -17);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "#c0c9bf"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(54, -22); ctx.lineTo(63, -22); ctx.stroke();
+        ctx.fillStyle = "#edcf94";
+        ctx.beginPath(); ctx.arc(54, -28, 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#232b2e";
+        ctx.strokeStyle = "#8c9a95";
+        ctx.beginPath();
+        ctx.moveTo(42, -17); ctx.quadraticCurveTo(48, -18, 49, -12);
+        ctx.lineTo(46, -9); ctx.lineTo(51, -7); ctx.lineTo(47, -5);
+        ctx.lineTo(40, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "#d6d9d1"; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(47, -5); ctx.lineTo(50, -3); ctx.stroke();
+      } else {
+        // 尾根固定，尾端以較慢的節奏擺動；空中與減少動態效果時回到中立姿勢。
+        const tailSway = godzillaTailSway();
+        ctx.fillStyle = "#20272a";
+        ctx.strokeStyle = "#8b9893";
+        ctx.lineWidth = 1.7;
+        ctx.beginPath();
+        ctx.moveTo(14, -40);
+        ctx.bezierCurveTo(2, -36, -7, -33 + tailSway * .3, -15, -26 + tailSway * .7);
+        ctx.bezierCurveTo(-21, -20 + tailSway * .85, -27, -17 + tailSway, -32, -16 + tailSway);
+        ctx.bezierCurveTo(-23, -13 + tailSway, -17, -16 + tailSway * .8, -7, -22 + tailSway * .4);
+        ctx.lineTo(18, -21);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        for (const plate of [
+          [[-18, -27 + tailSway * .75], [-18, -38 + tailSway * .75], [-9, -29 + tailSway * .5]],
+          [[-7, -35 + tailSway * .4], [-4, -50 + tailSway * .3], [5, -39]],
+          [[3, -42], [10, -62], [19, -47]],
+          [[13, -49], [22, -74], [31, -52]],
+          [[26, -53], [35, -78], [43, -51]],
+          [[38, -53], [46, -69], [49, -48]]
+        ]) drawGodzillaPlate(plate);
+        const tucked = player.jump > 0 || player.velocity !== 0;
+        const step = tucked || reducedMotion.matches ? 0 : Math.sin(elapsed * 18) * 2;
+        drawGodzillaLeg(30, Math.max(0, -step), true, tucked);
+        ctx.fillStyle = body;
+        ctx.strokeStyle = "#98a5a0";
+        ctx.lineWidth = 1.9;
+        ctx.beginPath();
+        ctx.moveTo(9, -39);
+        ctx.bezierCurveTo(11, -53, 23, -63, 38, -61);
+        ctx.bezierCurveTo(48, -59, 52, -47, 54, -36);
+        ctx.lineTo(51, -25);
+        ctx.quadraticCurveTo(49, -15, 42, -11);
+        ctx.lineTo(27, -12);
+        ctx.quadraticCurveTo(17, -16, 12, -24);
+        ctx.quadraticCurveTo(7, -31, 9, -39);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#4d585a";
+        ctx.beginPath();
+        ctx.moveTo(30, -43);
+        ctx.quadraticCurveTo(39, -42, 44, -36);
+        ctx.lineTo(43, -25);
+        ctx.quadraticCurveTo(40, -18, 35, -13);
+        ctx.lineTo(26, -17);
+        ctx.quadraticCurveTo(22, -23, 23, -30);
+        ctx.quadraticCurveTo(25, -39, 30, -43);
+        ctx.closePath(); ctx.fill();
+        drawGodzillaLeg(10, Math.max(0, step), false, tucked);
+        ctx.fillStyle = "#343d40";
+        ctx.strokeStyle = "#a3afaa";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(40, -60);
+        ctx.quadraticCurveTo(47, -68, 55, -66);
+        ctx.quadraticCurveTo(62, -65, 63, -59);
+        ctx.lineTo(66, -54);
+        ctx.lineTo(64, -51);
+        ctx.lineTo(67, -49);
+        ctx.lineTo(65, -46);
+        ctx.lineTo(55, -46);
+        ctx.quadraticCurveTo(50, -44, 46, -47);
+        ctx.lineTo(40, -51);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#242d30";
+        ctx.beginPath(); ctx.moveTo(51, -46); ctx.quadraticCurveTo(59, -44, 65, -46);
+        ctx.lineTo(60, -42); ctx.lineTo(52, -43); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#c1c9c0"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(53, -48); ctx.lineTo(64, -48); ctx.stroke();
+        ctx.strokeStyle = "#aebbb2"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(48, -60);
+        ctx.quadraticCurveTo(56, -64, 61, -60); ctx.stroke();
+        ctx.fillStyle = "#edcf94";
+        ctx.beginPath(); ctx.arc(55, -56, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#20282b";
+        ctx.strokeStyle = "#899691";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(43, -41); ctx.quadraticCurveTo(50, -43, 51, -36);
+        ctx.lineTo(47, -31); ctx.lineTo(52, -28); ctx.lineTo(49, -25);
+        ctx.lineTo(42, -29); ctx.lineTo(39, -37);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "#d9dcd4"; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(49, -25); ctx.lineTo(52, -22); ctx.stroke();
+        ctx.strokeStyle = "rgba(168, 180, 174, .55)"; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(15, -35); ctx.lineTo(19, -39);
+        ctx.moveTo(18, -27); ctx.lineTo(22, -31);
+        ctx.moveTo(35, -39); ctx.lineTo(38, -42); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function drawHeroLeg(left, lift, rear, tucked, skin) {
+      const footY = tucked ? -3 : 0;
+      ctx.save(); ctx.translate(0, -lift);
+      ctx.fillStyle = rear ? skin.tail : skin.legs;
+      ctx.strokeStyle = "rgba(31, 63, 74, .7)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(left + 3, -20);
+      ctx.quadraticCurveTo(left + 13, -23, left + 15, -14);
+      ctx.lineTo(left + 12, -9);
+      ctx.lineTo(left + 14, footY - 5);
+      ctx.lineTo(left + 21, footY - 3);
+      ctx.lineTo(left + 22, footY);
+      ctx.lineTo(left + 6, footY);
+      ctx.lineTo(left + 3, -7);
+      ctx.quadraticCurveTo(left - 1, -16, left + 3, -20);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = skin.trim; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(left + 17, footY - 1);
+      ctx.lineTo(left + 20, footY); ctx.stroke();
+      ctx.restore();
+    }
+    function drawHeroCrouchLeg(left, rear, skin) {
+      ctx.fillStyle = rear ? skin.tail : skin.legs;
+      ctx.strokeStyle = "rgba(31, 63, 74, .7)";
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(left + 2, -14);
+      ctx.quadraticCurveTo(left + 12, -16, left + 16, -9);
+      ctx.lineTo(left + 11, -6);
+      ctx.lineTo(left + 21, -3);
+      ctx.lineTo(left + 22, 0);
+      ctx.lineTo(left + 5, 0);
+      ctx.lineTo(left + 3, -4);
+      ctx.lineTo(left - 1, -7);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = skin.trim; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(left + 17, -1);
+      ctx.lineTo(left + 20, 0); ctx.stroke();
+    }
+    function drawHeroSpines(skin, duck) {
+      ctx.save();
+      if (duck) ctx.scale(1, .58);
+      if (skin.id === "prism") {
+        for (const [x, y] of [[7, -44], [18, -50], [29, -54], [39, -54]]) {
+          ctx.fillStyle = "#dcebb5";
+          ctx.beginPath(); ctx.moveTo(x, y + 3);
+          ctx.quadraticCurveTo(x - 4, y - 10, x + 6, y - 16);
+          ctx.quadraticCurveTo(x + 9, y - 6, x + 5, y + 3);
+          ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = "#65a37b"; ctx.lineWidth = 1.4; ctx.stroke();
+        }
+      } else if (skin.id === "cloud") {
+        for (const [x, y] of [[7, -45], [18, -51], [30, -55], [40, -55]]) {
+          ctx.fillStyle = "#eff8fc";
+          ctx.beginPath(); ctx.moveTo(x, y + 3);
+          ctx.quadraticCurveTo(x - 2, y - 13, x + 7, y - 17);
+          ctx.quadraticCurveTo(x + 11, y - 5, x + 5, y + 3);
+          ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = "#8fb9dd"; ctx.lineWidth = 1.3; ctx.stroke();
+        }
+      } else if (skin.id === "shield") {
+        for (const [x, y] of [[7, -46], [18, -52], [29, -56], [40, -54]]) {
+          ctx.fillStyle = "#d7baf0";
+          ctx.beginPath(); ctx.moveTo(x, y + 4);
+          ctx.lineTo(x + 1, y - 9); ctx.lineTo(x + 6, y - 15);
+          ctx.lineTo(x + 11, y - 8); ctx.lineTo(x + 9, y + 4);
+          ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = "#ffe4aa"; ctx.lineWidth = 2; ctx.stroke();
+        }
+      } else {
+        for (const [i, x, y] of [[0, 7, -46], [1, 18, -52], [2, 29, -56], [3, 40, -54]]) {
+          ctx.fillStyle = skin.spikes[i];
+          ctx.beginPath(); ctx.moveTo(x, y + 3);
+          ctx.quadraticCurveTo(x - 3, y - 12, x + 8, y - 18);
+          ctx.quadraticCurveTo(x + 10, y - 5, x + 7, y + 3);
+          ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = "#d9f8ec"; ctx.lineWidth = 1.6; ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    function drawHeroOutfit(skin, duck) {
+      ctx.save();
+      if (duck) ctx.scale(1, .56);
+      if (skin.id === "prism") {
+        ctx.fillStyle = "#e8d49a";
+        ctx.beginPath(); ctx.moveTo(40, -52);
+        ctx.quadraticCurveTo(25, -55, 11, -51);
+        ctx.lineTo(23, -48); ctx.lineTo(12, -45);
+        ctx.quadraticCurveTo(30, -46, 42, -48);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(12, -49);
+        ctx.lineTo(0, -56); ctx.lineTo(5, -46); ctx.closePath(); ctx.fill();
+      } else if (skin.id === "cloud") {
+        ctx.fillStyle = "#eaf5fb";
+        ctx.beginPath(); ctx.moveTo(19, -44);
+        ctx.quadraticCurveTo(30, -48, 40, -42);
+        ctx.lineTo(35, -26); ctx.lineTo(11, -29);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#8cb9df"; ctx.lineWidth = 1.5; ctx.stroke();
+      } else if (skin.id === "shield") {
+        ctx.fillStyle = "#8169ae";
+        ctx.beginPath(); ctx.moveTo(35, -44);
+        ctx.lineTo(45, -41); ctx.lineTo(47, -32);
+        ctx.lineTo(39, -27); ctx.lineTo(31, -34);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#ffe3a1"; ctx.lineWidth = 2; ctx.stroke();
+      } else {
+        const cape = ctx.createLinearGradient(11, -44, 37, -20);
+        cape.addColorStop(0, "#a0eeda");
+        cape.addColorStop(.55, "#81c8dc");
+        cape.addColorStop(1, "#918cce");
+        ctx.fillStyle = cape;
+        ctx.beginPath(); ctx.moveTo(18, -45);
+        ctx.quadraticCurveTo(30, -49, 40, -41);
+        ctx.lineTo(35, -22); ctx.lineTo(11, -29);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#d8f7e7"; ctx.lineWidth = 1.6; ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function drawHeroBadge(skin, duck) {
+      if (skin.id !== "shield") return;
+      ctx.save();
+      if (duck) ctx.scale(1, .56);
+      ctx.fillStyle = "#fff0bc";
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const angle = -Math.PI / 2 + i * Math.PI / 5;
+        const radius = i % 2 ? 3.5 : 7;
+        const x = 24 + Math.cos(angle) * radius;
+        const y = -31 + Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    function drawHeroHeadwear(skin, duck) {
+      ctx.save();
+      if (duck) ctx.scale(1, .52);
+      if (skin.id === "prism") {
+        ctx.strokeStyle = "#f1da9e"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(42, -61); ctx.lineTo(61, -60); ctx.stroke();
+        ctx.fillStyle = "#e7d392";
+        ctx.beginPath(); ctx.moveTo(43, -61); ctx.lineTo(28, -65);
+        ctx.lineTo(35, -59); ctx.closePath(); ctx.fill();
+      } else if (skin.id === "cloud") {
+        ctx.fillStyle = "#f7fbfc";
+        ctx.beginPath(); ctx.moveTo(40, -64);
+        ctx.quadraticCurveTo(39, -76, 48, -75);
+        ctx.quadraticCurveTo(52, -69, 47, -63);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#8fb9df"; ctx.lineWidth = 1.3; ctx.stroke();
+      } else if (skin.id === "shield") {
+        ctx.strokeStyle = "#ffe3a1"; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.moveTo(43, -63); ctx.lineTo(62, -61); ctx.stroke();
+        ctx.fillStyle = "#fff1ba";
+        ctx.beginPath(); ctx.moveTo(48, -64); ctx.lineTo(52, -70);
+        ctx.lineTo(56, -63); ctx.closePath(); ctx.fill();
+      } else {
+        ctx.fillStyle = "#d8b6ed";
+        ctx.beginPath(); ctx.moveTo(43, -65);
+        ctx.quadraticCurveTo(47, -75, 56, -76);
+        ctx.quadraticCurveTo(53, -67, 48, -62);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#c6f7e8"; ctx.lineWidth = 1.4; ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function heroTailSway() {
+      if (state === "paused") return pausedHeroTailSway;
+      return player.jump === 0 && player.velocity === 0 && !player.duck && !reducedMotion.matches
+        ? Math.sin(elapsed * 6) * 3 : 0;
+    }
+    function drawHeroTailAccent(skin, duck, sway = 0) {
+      ctx.save();
+      if (duck) ctx.scale(1, .58);
+      if (skin.id === "cloud") {
+        ctx.fillStyle = "#f2f9fb";
+        ctx.beginPath(); ctx.moveTo(-14, -27 + sway);
+        ctx.quadraticCurveTo(-22, -37 + sway, -21, -22 + sway);
+        ctx.lineTo(-14, -23 + sway); ctx.closePath(); ctx.fill();
+      } else if (skin.id === "shield") {
+        ctx.strokeStyle = skin.trim; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(-11, -31 + sway * .8); ctx.lineTo(-8, -24 + sway * .7);
+        ctx.moveTo(-2, -34 + sway * .4); ctx.lineTo(1, -27 + sway * .3); ctx.stroke();
+      } else if (skin.id === "aurora") {
+        ctx.strokeStyle = "#d8f6ec"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-15, -25 + sway);
+        ctx.quadraticCurveTo(-4, -34 + sway * .5, 8, -32); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function drawHeroDino(skin) {
+      ctx.save(); ctx.lineJoin = "round";
+      const body = ctx.createLinearGradient(5, -61, 54, -7);
+      body.addColorStop(0, skin.bodyA);
+      body.addColorStop(1, skin.bodyB);
+      if (player.duck) {
+        ctx.fillStyle = skin.tail;
+        ctx.beginPath(); ctx.moveTo(10, -22);
+        ctx.quadraticCurveTo(-2, -24, -14, -17);
+        ctx.quadraticCurveTo(-7, -11, 11, -11);
+        ctx.closePath(); ctx.fill();
+        drawHeroTailAccent(skin, true);
+        drawHeroSpines(skin, true);
+        drawHeroCrouchLeg(8, true, skin);
+        ctx.fillStyle = body;
+        ctx.strokeStyle = skin.tail; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(5, -19);
+        ctx.quadraticCurveTo(8, -32, 26, -32);
+        ctx.quadraticCurveTo(47, -33, 54, -20);
+        ctx.lineTo(52, -11);
+        ctx.quadraticCurveTo(46, -5, 32, -5);
+        ctx.lineTo(17, -5);
+        ctx.quadraticCurveTo(3, -7, 5, -19);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        drawHeroOutfit(skin, true);
+        ctx.fillStyle = skin.belly;
+        ctx.beginPath(); ctx.moveTo(23, -26);
+        ctx.quadraticCurveTo(33, -28, 40, -21);
+        ctx.lineTo(39, -13); ctx.lineTo(32, -8);
+        ctx.lineTo(25, -10); ctx.quadraticCurveTo(21, -16, 23, -26);
+        ctx.closePath(); ctx.fill();
+        drawHeroCrouchLeg(32, false, skin);
+        drawHeroBadge(skin, true);
+        ctx.fillStyle = body;
+        ctx.beginPath(); ctx.moveTo(42, -27);
+        ctx.quadraticCurveTo(48, -35, 56, -32);
+        ctx.lineTo(62, -29); ctx.lineTo(64, -23);
+        ctx.lineTo(62, -20); ctx.lineTo(66, -17);
+        ctx.lineTo(64, -14); ctx.lineTo(54, -14);
+        ctx.quadraticCurveTo(48, -15, 43, -17);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = skin.bodyB;
+        ctx.beginPath(); ctx.moveTo(43, -16);
+        ctx.quadraticCurveTo(49, -19, 51, -12);
+        ctx.lineTo(47, -9); ctx.lineTo(51, -7);
+        ctx.lineTo(47, -5); ctx.lineTo(41, -10);
+        ctx.closePath(); ctx.fill();
+        drawHeroHeadwear(skin, true);
+        ctx.fillStyle = "#1d3150";
+        ctx.beginPath(); ctx.arc(54, -25, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = skin.legs; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(54, -19); ctx.lineTo(63, -19); ctx.stroke();
+      } else {
+        const tucked = player.jump > 0 || player.velocity !== 0;
+        const step = tucked || reducedMotion.matches ? 0 : Math.sin(elapsed * 22) * 3;
+        const tailSway = heroTailSway();
+        ctx.fillStyle = skin.tail;
+        ctx.beginPath(); ctx.moveTo(11, -38);
+        ctx.quadraticCurveTo(-2, -39 + tailSway * .3, -19, -23 + tailSway);
+        ctx.quadraticCurveTo(-11, -22 + tailSway * .7, 2, -20 + tailSway * .15);
+        ctx.lineTo(17, -25); ctx.closePath(); ctx.fill();
+        drawHeroTailAccent(skin, false, tailSway);
+        drawHeroSpines(skin, false);
+        drawHeroLeg(30, Math.max(0, -step), true, tucked, skin);
+        ctx.fillStyle = body;
+        ctx.strokeStyle = skin.tail; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(9, -43);
+        ctx.quadraticCurveTo(15, -57, 34, -56);
+        ctx.quadraticCurveTo(47, -54, 51, -39);
+        ctx.lineTo(50, -24);
+        ctx.quadraticCurveTo(47, -13, 36, -10);
+        ctx.lineTo(23, -11);
+        ctx.quadraticCurveTo(8, -17, 7, -30);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        drawHeroOutfit(skin, false);
+        ctx.fillStyle = skin.belly;
+        ctx.beginPath(); ctx.moveTo(28, -43);
+        ctx.quadraticCurveTo(39, -42, 42, -31);
+        ctx.lineTo(40, -23); ctx.lineTo(34, -14);
+        ctx.lineTo(26, -17); ctx.quadraticCurveTo(22, -26, 23, -33);
+        ctx.closePath(); ctx.fill();
+        drawHeroLeg(10, Math.max(0, step), false, tucked, skin);
+        drawHeroBadge(skin, false);
+        ctx.fillStyle = body;
+        ctx.beginPath(); ctx.moveTo(39, -60);
+        ctx.quadraticCurveTo(46, -68, 55, -66);
+        ctx.quadraticCurveTo(63, -65, 64, -57);
+        ctx.lineTo(63, -52); ctx.lineTo(68, -46);
+        ctx.lineTo(65, -42); ctx.lineTo(53, -42);
+        ctx.quadraticCurveTo(47, -44, 40, -49);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = skin.bodyB;
+        ctx.beginPath(); ctx.moveTo(43, -39);
+        ctx.quadraticCurveTo(51, -41, 52, -33);
+        ctx.lineTo(48, -28); ctx.lineTo(53, -26);
+        ctx.lineTo(49, -23); ctx.lineTo(41, -28);
+        ctx.closePath(); ctx.fill();
+        drawHeroHeadwear(skin, false);
+        ctx.fillStyle = "#1d3150";
+        ctx.beginPath(); ctx.arc(54, -55, 2.7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,.8)";
+        ctx.beginPath(); ctx.arc(54.8, -55.8, .8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = skin.legs; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(54, -46); ctx.lineTo(65, -46); ctx.stroke();
+      }
+      ctx.restore();
+    }
     function drawDino() {
       const x = player.x, bottom = world.ground - player.jump;
       const skin = currentSkin();
@@ -935,86 +1549,12 @@
       }
       ctx.fillStyle = "rgba(3, 9, 29, .2)";
       ctx.beginPath(); ctx.ellipse(27, player.jump + 5, 30 - Math.min(player.jump / 12, 10), 5, 0, 0, Math.PI * 2); ctx.fill();
-      const body = ctx.createLinearGradient(0, -62, 52, 0);
-      body.addColorStop(0, skin.bodyA); body.addColorStop(1, skin.bodyB);
-      if (player.duck) {
-        ctx.fillStyle = skin.tail;
-        ctx.beginPath(); ctx.moveTo(9, -19); ctx.lineTo(-12, -24); ctx.lineTo(2, -12); ctx.fill();
-        roundRect(2, -29, 55, 27, 13, body);
-        roundRect(37, -32, 25, 22, 9, body);
-        if (activeSkinId === "godzilla") {
-          ctx.lineWidth = 1.6;
-          roundRect(2, -29, 55, 27, 13, null, "#899894");
-          roundRect(37, -32, 25, 22, 9, null, "#899894");
-          ctx.strokeStyle = "#778884";
-          ctx.beginPath(); ctx.moveTo(8, -12); ctx.lineTo(35, -12); ctx.stroke();
-        }
-        for (let i = 0; i < 4; i++) {
-          ctx.fillStyle = skin.spikes[i]; ctx.beginPath();
-          ctx.moveTo(8 + i * 10, -28); ctx.lineTo(13 + i * 10, activeSkinId === "godzilla" ? -42 : -37);
-          ctx.lineTo(19 + i * 10, -28); ctx.fill();
-        }
-        roundRect(39, -29, 20, 3, 2, activeSkinId === "godzilla" ? "#9fb5ac" : "#e4c992");
-        ctx.fillStyle = activeSkinId === "godzilla" ? "#f1d29b" : "#20294d";
-        ctx.beginPath(); ctx.arc(52, -24, 2.4, 0, Math.PI * 2); ctx.fill();
-        roundRect(15, -5, 16, 6, 3, skin.legs); roundRect(39, -5, 15, 6, 3, skin.legs);
-      } else {
-        const step = player.jump > 0 || state !== "running" || reducedMotion.matches ? 0 : Math.sin(elapsed * 22) * 5;
-        if (activeSkinId !== "godzilla") {
-          ctx.fillStyle = activeSkinId === "cloud" ? "rgba(224, 238, 244, .8)" :
-            activeSkinId === "shield" ? "rgba(202, 168, 208, .78)" : "rgba(217, 190, 140, .78)";
-          ctx.beginPath(); ctx.moveTo(12, -42); ctx.quadraticCurveTo(-3, -26, -18, -15);
-          ctx.lineTo(17, -19); ctx.fill();
-        }
-        ctx.fillStyle = skin.tail;
-        ctx.beginPath(); ctx.moveTo(12, -35); ctx.quadraticCurveTo(-8, -38, -16, -26);
-        ctx.quadraticCurveTo(-3, -29, 6, -19); ctx.fill();
-        if (activeSkinId === "godzilla") {
-          ctx.strokeStyle = "#84948f"; ctx.lineWidth = 1.6;
-          ctx.beginPath(); ctx.moveTo(12, -35); ctx.quadraticCurveTo(-8, -38, -16, -26); ctx.stroke();
-        }
-        roundRect(10, -15 + step, 11, 16 - Math.max(step, 0), 5, skin.legs);
-        roundRect(31, -15 - step, 11, 16 + Math.min(step, 0), 5, skin.legs);
-        roundRect(3, -46, 43, 37, 17, body);
-        roundRect(32, -57, 17, 33, 8, body);
-        roundRect(30, -66, 35, 28, 11, body);
-        roundRect(43, -43, 23, 10, 5, skin.snout);
-        if (activeSkinId === "godzilla") {
-          ctx.lineWidth = 1.6;
-          roundRect(3, -46, 43, 37, 17, null, "#899894");
-          roundRect(30, -66, 35, 28, 11, null, "#9baaa1");
-          roundRect(43, -43, 23, 10, 5, null, "#899894");
-        }
-        for (let i = 0; i < 5; i++) {
-          ctx.fillStyle = skin.spikes[i]; ctx.beginPath();
-          ctx.moveTo(4 + i * 8, -43 - i * 2);
-          ctx.lineTo(9 + i * 8, (activeSkinId === "godzilla" ? -62 : -54) - i * 2);
-          ctx.lineTo(16 + i * 8, -44 - i * 2); ctx.fill();
-        }
-        ctx.fillStyle = activeSkinId === "shield" ? "#f5d9f5" : activeSkinId === "godzilla" ? "#586568" : "#f3d39b";
-        ctx.beginPath(); ctx.ellipse(29, -25, 14, 11, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = activeSkinId === "godzilla" ? "#f1d29b" : "#1b3150";
-        ctx.beginPath(); ctx.arc(53, -55, 2.8, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.beginPath(); ctx.arc(54, -56, .8, 0, Math.PI * 2); ctx.fill();
-        roundRect(31, -62, 30, 4, 2, activeSkinId === "godzilla" ? "#a8b9af" : "#e8c98e");
-        ctx.fillStyle = activeSkinId === "godzilla" ? "#a8b9af" : "#e8c98e";
-        ctx.beginPath(); ctx.moveTo(57, -60); ctx.lineTo(68, -53); ctx.lineTo(57, -55); ctx.fill();
-        if (activeSkinId === "cloud") {
-          ctx.fillStyle = "rgba(255,255,255,.88)";
-          for (const [cx, cy, r] of [[36, -69, 5], [43, -71, 7], [50, -68, 5]]) {
-            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-          }
-        } else if (activeSkinId === "shield") {
-          ctx.fillStyle = "#fff0ae";
-          ctx.beginPath(); ctx.moveTo(25, -37); ctx.lineTo(28, -31); ctx.lineTo(34, -30);
-          ctx.lineTo(29, -26); ctx.lineTo(30, -20); ctx.lineTo(25, -24);
-          ctx.lineTo(20, -20); ctx.lineTo(21, -26); ctx.lineTo(16, -30);
-          ctx.lineTo(22, -31); ctx.fill();
-        } else if (activeSkinId === "aurora") {
-          ctx.strokeStyle = "rgba(230,246,255,.76)"; ctx.lineWidth = 2.5;
-          ctx.beginPath(); ctx.moveTo(16, -35); ctx.quadraticCurveTo(25, -42, 34, -35); ctx.stroke();
-        }
+      if (activeSkinId === "godzilla") {
+        drawGodzilla();
+        ctx.restore();
+        return;
       }
+      drawHeroDino(skin);
       ctx.restore();
     }
     function drawBeam() {

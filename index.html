@@ -59,26 +59,41 @@
     .stage { position: relative; height: clamp(370px, 57vh, 565px); min-height: 370px; }
     canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; }
     .scoreboard {
-      position: absolute; z-index: 2; top: 18px; left: 18px; right: 18px; gap: 8px;
-      pointer-events: none; flex-wrap: wrap;
+      position: absolute; z-index: 2; top: 18px; left: 18px; right: 18px;
+      display: grid; grid-template-columns: max-content max-content 184px minmax(0, 1fr);
+      grid-template-areas: "current best skill speed" ". . . scene";
+      align-items: start; gap: 8px; pointer-events: none;
     }
+    .score-current { grid-area: current; }
+    .score-best { grid-area: best; }
     .score-chip {
       min-width: 94px; padding: 9px 13px; border: 1px solid rgba(255, 255, 255, .15);
       border-radius: 14px; background: rgba(14, 38, 36, .49); backdrop-filter: blur(9px);
     }
     .score-chip small { display: block; color: #d8e3d4; font-size: .69rem; letter-spacing: .08em; }
     .score-chip strong { display: block; margin-top: 1px; font-size: 1.2rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
-    .speed-chip { margin-left: auto; min-width: 82px; text-align: right; }
+    .speed-chip { grid-area: speed; justify-self: end; min-width: 82px; text-align: right; }
     .skill-badge {
-      position: absolute; z-index: 2; top: 90px; right: 18px; min-width: 145px;
-      padding: 8px 12px; border: 1px solid rgba(255,255,255,.18); border-radius: 12px;
+      grid-area: skill; width: 184px;
+      padding: 8px 11px; border: 1px solid rgba(255,255,255,.18); border-radius: 12px;
       color: #f7f5ed; background: rgba(14, 38, 36, .55); backdrop-filter: blur(9px);
-      text-align: right; font-size: .77rem; font-weight: 750; pointer-events: none;
+      font-size: .74rem; font-weight: 750; pointer-events: none;
     }
     .skill-badge.ready { color: #c6e5aa; }
     .skill-badge.active { color: #ffe59a; }
+    .skill-badge.usable { animation: skill-card-pulse 1.2s ease-in-out infinite; }
+    @keyframes skill-card-pulse {
+      0%, 100% { border-color: rgba(190, 231, 173, .38); background-color: rgba(14, 38, 36, .55); box-shadow: 0 0 0 rgba(169, 229, 170, 0); }
+      50% { border-color: rgba(217, 246, 190, .86); background-color: rgba(28, 69, 53, .74); box-shadow: 0 0 15px rgba(169, 229, 170, .28); }
+    }
+    .skill-head { display: flex; align-items: baseline; justify-content: space-between; gap: 7px; }
+    .skill-head span { white-space: nowrap; }
+    .skill-remaining { color: #f7f5ed; font-variant-numeric: tabular-nums; }
+    .skill-track { height: 7px; margin-top: 7px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.16); }
+    .skill-fill { display: block; width: 100%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #78c4a7, #d9e9a7); }
+    .skill-effect { min-height: 1.1em; margin-top: 4px; color: #ffe59a; font-size: .69rem; }
     .scene-badge {
-      position: absolute; z-index: 2; top: 90px; left: 18px;
+      grid-area: scene; justify-self: end;
       padding: 8px 12px; border: 1px solid rgba(255,255,255,.2); border-radius: 12px;
       color: #fff0d1; background: rgba(14, 38, 36, .62); backdrop-filter: blur(9px);
       font-size: .77rem; font-weight: 800; pointer-events: none;
@@ -123,6 +138,11 @@
     .control:active { transform: translateY(2px); background: rgba(255,255,255,.19); }
     .control:disabled { cursor: default; opacity: .58; transform: none; }
     .control.skill-ready { color: #f3dda5; border-color: rgba(241,211,151,.55); }
+    .control.skill-ready { animation: skill-button-pulse 1.2s ease-in-out infinite; }
+    @keyframes skill-button-pulse {
+      0%, 100% { border-color: rgba(241, 211, 151, .55); background-color: rgba(255, 255, 255, .08); box-shadow: 0 0 0 rgba(241, 211, 151, 0); }
+      50% { border-color: rgba(255, 233, 181, .95); background-color: rgba(241, 211, 151, .18); box-shadow: 0 0 15px rgba(241, 211, 151, .27); }
+    }
     .collection {
       margin-top: 24px; padding: clamp(20px, 3vw, 30px);
       border: 1px solid var(--line); border-radius: 24px;
@@ -176,13 +196,20 @@
       .audio-btn .audio-label { display: none; }
       .game-card { border-radius: 20px; }
       .stage { height: clamp(390px, 59vh, 510px); }
-      .scoreboard { top: 12px; left: 11px; right: 11px; gap: 5px; }
-      .score-chip { min-width: 72px; padding: 7px 9px; border-radius: 10px; }
+      .scoreboard {
+        top: 12px; left: 11px; right: 11px; gap: 5px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(126px, 1.6fr);
+        grid-template-areas: "current best skill" "speed . scene";
+      }
+      .score-chip { min-width: 0; padding: 7px 6px; border-radius: 10px; }
       .score-chip strong { font-size: 1rem; }
       .score-chip small { font-size: .62rem; }
-      .speed-chip { min-width: 67px; }
-      .skill-badge { top: 77px; right: 11px; min-width: 122px; padding: 6px 9px; font-size: .69rem; }
-      .scene-badge { top: 77px; left: 11px; padding: 6px 9px; font-size: .69rem; }
+      .speed-chip { min-width: 0; justify-self: start; }
+      .skill-badge { width: 100%; padding: 6px 9px; font-size: .67rem; }
+      .skill-head { flex-wrap: wrap; gap: 1px 5px; }
+      .skill-remaining { margin-left: auto; }
+      .skill-effect { font-size: .64rem; }
+      .scene-badge { padding: 6px 9px; font-size: .69rem; }
       .overlay { padding: 70px 15px 25px; }
       .game-tools { padding: 10px; }
       .hint { display: none; }
@@ -204,6 +231,8 @@
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+      .skill-badge.usable { animation: none !important; border-color: rgba(217, 246, 190, .86); background-color: rgba(28, 69, 53, .7); box-shadow: 0 0 0 2px rgba(169, 229, 170, .2); }
+      .control.skill-ready { animation: none !important; border-color: rgba(255, 233, 181, .95); background-color: rgba(241, 211, 151, .16); box-shadow: 0 0 0 2px rgba(241, 211, 151, .2); }
     }
   </style>
 </head>
@@ -224,13 +253,17 @@
     <section class="game-card" aria-label="龍行江湖小恐龍跑酷遊戲">
       <div class="stage" id="stage">
         <canvas id="gameCanvas" tabindex="0" aria-label="遊戲畫面，按空白鍵跳躍，按住下方向鍵蹲下"></canvas>
-        <div class="scoreboard" aria-label="遊戲分數">
-          <div class="score-chip"><small>目前分數</small><strong id="score">0000</strong></div>
-          <div class="score-chip"><small>最高分</small><strong id="best">0000</strong></div>
+        <div class="scoreboard" aria-label="遊戲資訊">
+          <div class="score-chip score-current"><small>目前分數</small><strong id="score">0000</strong></div>
+          <div class="score-chip score-best"><small>最高分</small><strong id="best">0000</strong></div>
+          <div class="skill-badge ready" id="skillStatus">
+            <div class="skill-head"><span id="skillName">凌風身法</span><span class="skill-remaining" id="skillRemaining">可使用</span></div>
+            <div class="skill-track" id="skillProgress" role="progressbar" aria-label="技能冷卻進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="冷卻完成，可使用"><span class="skill-fill" id="skillFill"></span></div>
+            <div class="skill-effect" id="skillEffect"></div>
+          </div>
           <div class="score-chip speed-chip"><small>速度</small><strong id="speed">×1.0</strong></div>
+          <div class="scene-badge" aria-live="polite">場景 · <span id="sceneName">青竹山徑</span></div>
         </div>
-        <div class="scene-badge" aria-live="polite">場景 · <span id="sceneName">青竹山徑</span></div>
-        <div class="skill-badge ready" id="skillStatus">技能已就緒 · Shift／X</div>
         <div class="toast" id="achievementToast" role="status" aria-live="polite" hidden></div>
         <div class="overlay" id="overlay" aria-live="polite">
           <div class="modal">
