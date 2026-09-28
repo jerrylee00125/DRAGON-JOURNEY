@@ -6,9 +6,14 @@
     const overlay = document.getElementById("overlay");
     const mainButton = document.getElementById("mainButton");
     const pauseButton = document.getElementById("pauseButton");
+    const musicButton = document.getElementById("musicButton");
     const soundButton = document.getElementById("soundButton");
     const milestoneSound = document.getElementById("milestoneSound");
     const hitSound = document.getElementById("hitSound");
+    const jumpSound = document.getElementById("jumpSound");
+    const duckSound = document.getElementById("duckSound");
+    const skillSound = document.getElementById("skillSound");
+    const musicPlayers = [document.getElementById("musicA"), document.getElementById("musicB")];
     const scoreEl = document.getElementById("score");
     const bestEl = document.getElementById("best");
     const speedEl = document.getElementById("speed");
@@ -20,31 +25,33 @@
     const achievementGrid = document.getElementById("achievementGrid");
     const collectionNote = document.getElementById("collectionNote");
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-    const colors = ["#ff776e", "#ffbf70", "#ffe587", "#8ee5a5", "#71dce5", "#9fb6fb"];
+    const colors = ["#d8ecb2", "#a5d7bd", "#e8d59b", "#90bfae", "#d5e5cd"];
     const skins = [
-      { id: "prism", name: "虹光龍", ability: "虹彩衝刺", hint: "跑速提高 10%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#b2f4ce", bodyB: "#55c9bd", tail: "#47b9b6", snout: "#69d4c5", legs: "#357f99", spikes: colors },
+      { id: "prism", name: "青嵐龍", ability: "凌風身法", hint: "跑速提高 10%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#c3e2bc", bodyB: "#6fac92", tail: "#548d78", snout: "#8bc9a4", legs: "#44695b", spikes: colors },
       { id: "cloud", name: "雲翼龍", ability: "雲端二段跳", hint: "空中再跳一次，躍過危險", cooldown: 5, duration: 0, bodyA: "#c8e7ff", bodyB: "#83b8f5", tail: "#7aa8db", snout: "#a8d4fb", legs: "#5878c4", spikes: ["#f9faff", "#d3e4ff", "#a6c7f9", "#edf3ff", "#b2c6f3"] },
       { id: "shield", name: "星盾龍", ability: "星光護盾", hint: "3 秒內抵擋一次碰撞", cooldown: 5, duration: 3, bodyA: "#e1b7f8", bodyB: "#a588df", tail: "#9475c3", snout: "#c4a4eb", legs: "#745caa", spikes: ["#fff0b4", "#ffd3e3", "#ded0ff", "#a9b8ff", "#ffe1a4"] },
-      { id: "aurora", name: "極光龍", ability: "極光緩速", hint: "場景放慢至 75%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#9cf3e0", bodyB: "#6b97df", tail: "#6c9ac4", snout: "#9dccdc", legs: "#536daf", spikes: ["#9df2d8", "#79e0d8", "#a9b9fc", "#d9a7f0", "#b7f9d4"] }
+      { id: "aurora", name: "極光龍", ability: "極光緩速", hint: "場景放慢至 75%，持續 2.5 秒", cooldown: 5, duration: 2.5, bodyA: "#9cf3e0", bodyB: "#6b97df", tail: "#6c9ac4", snout: "#9dccdc", legs: "#536daf", spikes: ["#9df2d8", "#79e0d8", "#a9b9fc", "#d9a7f0", "#b7f9d4"] },
+      { id: "godzilla", name: "哥吉拉", ability: "光速破壞", hint: "清除畫面內前方所有障礙", cooldown: 5, duration: 0, bodyA: "#444b4d", bodyB: "#171c20", tail: "#202629", snout: "#30383a", legs: "#11171b", spikes: ["#dcf9cd", "#b4e6c3", "#93d4c1", "#c8edbb", "#e5f7d4"] }
     ];
     const achievementDefs = [
-      { id: "first100", name: "虹光起跑", description: "單局達 100 分", goal: 100, reward: "解鎖雲翼龍", icon: "🌈" },
-      { id: "ground10", name: "跨欄新星", description: "單局跳過 10 個地面障礙", goal: 10, reward: "成就徽章", icon: "🌵" },
-      { id: "birds5", name: "低空舞步", description: "單局蹲下閃過 5 個飛行障礙", goal: 5, reward: "解鎖星盾龍", icon: "🪽" },
-      { id: "score500", name: "遠行者", description: "單局達 500 分", goal: 500, reward: "成就徽章", icon: "✨" },
-      { id: "passed25", name: "障礙達人", description: "單局通過 25 個障礙", goal: 25, reward: "成就徽章", icon: "🏁" },
-      { id: "skill3", name: "技能節奏", description: "單局發動技能 3 次，並達 300 分", goal: 100, reward: "成就徽章", icon: "✦" },
-      { id: "allSix", name: "七彩收藏家", description: "完成前六個成就", goal: 6, reward: "解鎖極光龍", icon: "🏆" }
+      { id: "first100", name: "初入江湖", description: "單局達 100 分", goal: 100, reward: "解鎖雲翼龍", icon: "🎋" },
+      { id: "ground10", name: "凌空十躍", description: "單局跳過 10 個地面障礙", goal: 10, reward: "成就徽章", icon: "🥋" },
+      { id: "birds5", name: "伏影五閃", description: "單局蹲下閃過 5 個飛行障礙", goal: 5, reward: "解鎖星盾龍", icon: "🍃" },
+      { id: "score500", name: "千里行者", description: "單局達 500 分", goal: 500, reward: "成就徽章", icon: "🧭" },
+      { id: "passed25", name: "過關斬將", description: "單局通過 25 個障礙", goal: 25, reward: "成就徽章", icon: "⚔" },
+      { id: "skill3", name: "招式連環", description: "單局發動技能 3 次，並達 300 分", goal: 100, reward: "成就徽章", icon: "✦" },
+      { id: "allSix", name: "百藝宗師", description: "完成前六個成就", goal: 6, reward: "解鎖極光龍", icon: "🏆" },
+      { id: "score5000", name: "萬里龍吟", description: "單局達 5000 分", goal: 5000, reward: "解鎖哥吉拉", icon: "🐲" }
     ];
     const clouds = [
       { x: .12, y: .19, s: .8, rate: .07 }, { x: .45, y: .28, s: 1.08, rate: .045 },
       { x: .77, y: .14, s: .66, rate: .065 }, { x: 1.08, y: .32, s: .92, rate: .05 }
     ];
     const scenes = [
-      { name: "暮光原野", sky: ["#232750", "#3b3c75", "#656392"], glow: "255, 189, 163", far: "#393b70", near: "#30345f", ground: ["#262b4f", "#171b39"], line: "#9ff0d7", track: "rgba(198, 215, 250, .18)" },
-      { name: "晨曦花園", sky: ["#42657d", "#a184a5", "#f5bcaa"], glow: "255, 221, 149", far: "#708f9a", near: "#4d797d", ground: ["#365c67", "#234955"], line: "#f8dea4", track: "rgba(255, 238, 192, .28)" },
-      { name: "晶彩峽谷", sky: ["#192e56", "#405c91", "#817fbd"], glow: "131, 229, 255", far: "#40568f", near: "#314978", ground: ["#263f68", "#182b50"], line: "#91e6ff", track: "rgba(164, 227, 255, .26)" },
-      { name: "極光雪境", sky: ["#132a43", "#26536d", "#547995"], glow: "129, 250, 215", far: "#456b86", near: "#325a76", ground: ["#345a76", "#203e5e"], line: "#cef8fa", track: "rgba(221, 252, 255, .27)" }
+      { name: "青竹山徑", sky: ["#172e32", "#345b59", "#7eaa8f"], glow: "205, 224, 161", far: "#446b65", near: "#31584f", ground: ["#314c45", "#182f30"], line: "#d4c695", track: "rgba(224, 214, 171, .21)" },
+      { name: "桃花渡口", sky: ["#544765", "#b48586", "#e7bb9d"], glow: "255, 219, 174", far: "#9f7c83", near: "#736c72", ground: ["#625961", "#363b4c"], line: "#f3d4ab", track: "rgba(249, 213, 178, .24)" },
+      { name: "雲崖劍谷", sky: ["#1e344d", "#45657a", "#829ba7"], glow: "200, 230, 221", far: "#5b7884", near: "#3c5b68", ground: ["#3e5260", "#243741"], line: "#d6e2c9", track: "rgba(214, 228, 212, .23)" },
+      { name: "雪夜古關", sky: ["#17283f", "#33506c", "#6b8393"], glow: "202, 221, 229", far: "#547184", near: "#3c5b6c", ground: ["#3a5061", "#213440"], line: "#d8e8e5", track: "rgba(220, 235, 230, .25)" }
     ];
     const sceneFadeDuration = .8;
     const keys = new Set();
@@ -59,7 +66,14 @@
     let spawnTimer = 1.6;
     let obstacles = [];
     let lastTime = 0;
-    let audioContext = null;
+    const actionVoices = new Set();
+    const musicVolume = .24;
+    const musicCrossfadeSeconds = 2;
+    let musicLeadIndex = 0;
+    let musicFading = false;
+    let musicPlaying = false;
+    let musicFadeBlocked = false;
+    let musicEpoch = 0;
     let naturalSpeed = 0;
     let sceneIndex = 0;
     let pendingSceneIndex = null;
@@ -68,6 +82,7 @@
     let skillCooldown = 0;
     let skillActive = 0;
     let shieldCharges = 0;
+    let beamRemaining = 0;
     let doubleJumpUsed = false;
     let runStats = { groundJumped: 0, birdsDucked: 0, passed: 0, skillUses: 0 };
     let toastQueue = [];
@@ -81,7 +96,9 @@
     }
     const storedBest = Number(readStore("rainbowDino.best.v1", "0"));
     let best = Number.isFinite(storedBest) ? Math.max(0, Math.floor(storedBest)) : 0;
-    let muted = readStore("rainbowDino.muted.v1", "0") === "1";
+    const legacyAudioDefault = readStore("rainbowDino.muted.v1", "0") === "1" ? "0" : "1";
+    let musicEnabled = readStore("rainbowDino.musicEnabled.v1", legacyAudioDefault) === "1";
+    let sfxEnabled = readStore("rainbowDino.sfxEnabled.v1", legacyAudioDefault) === "1";
     function loadProgress() {
       try {
         const saved = JSON.parse(readStore("rainbowDino.progress.v2", "{}"));
@@ -96,11 +113,14 @@
     const progressData = loadProgress();
     if (best >= 100) progressData.completed.first100 = true;
     if (best >= 500) progressData.completed.score500 = true;
+    if (best >= 5000) progressData.completed.score5000 = true;
+    progressData.bestRun.score5000 = Math.max(Number(progressData.bestRun.score5000) || 0, Math.min(best, 5000));
     if (achievementDefs.slice(0, 6).every(item => progressData.completed[item.id])) progressData.completed.allSix = true;
     function skinUnlocked(id) {
       return id === "prism" || (id === "cloud" && !!progressData.completed.first100) ||
         (id === "shield" && !!progressData.completed.birds5) ||
-        (id === "aurora" && !!progressData.completed.allSix);
+        (id === "aurora" && !!progressData.completed.allSix) ||
+        (id === "godzilla" && !!progressData.completed.score5000);
     }
     let selectedSkinId = skinUnlocked(progressData.selectedSkin) ? progressData.selectedSkin : "prism";
     let activeSkinId = selectedSkinId;
@@ -111,7 +131,7 @@
     }
     function currentAchievementValue(id) {
       switch (id) {
-        case "first100": case "score500": return score;
+        case "first100": case "score500": case "score5000": return score;
         case "ground10": return runStats.groundJumped;
         case "birds5": return runStats.birdsDucked;
         case "passed25": return runStats.passed;
@@ -135,7 +155,8 @@
       progressData.completed[id] = true;
       saveProgress();
       const achievement = achievementDefs.find(item => item.id === id);
-      const skinName = id === "first100" ? "雲翼龍" : id === "birds5" ? "星盾龍" : id === "allSix" ? "極光龍" : null;
+      const skinName = id === "first100" ? "雲翼龍" : id === "birds5" ? "星盾龍" :
+        id === "allSix" ? "極光龍" : id === "score5000" ? "哥吉拉" : null;
       toastQueue.push(`成就達成：${achievement.name}${skinName ? ` · 解鎖${skinName}` : ""}`);
       showNextToast();
       renderCollection();
@@ -145,23 +166,32 @@
         if (currentAchievementValue(item.id) >= item.goal) unlockAchievement(item.id);
       }
       if (currentAchievementValue("allSix") === 6) unlockAchievement("allSix");
+      if (currentAchievementValue("score5000") >= 5000) unlockAchievement("score5000");
     }
     function saveRunProgress() {
       for (const item of achievementDefs.slice(0, 6)) {
         const value = Math.min(item.goal, currentAchievementValue(item.id));
         progressData.bestRun[item.id] = Math.max(Number(progressData.bestRun[item.id]) || 0, value);
       }
+      progressData.bestRun.score5000 = Math.max(Number(progressData.bestRun.score5000) || 0, Math.min(score, 5000));
       saveProgress();
     }
     function skinPortrait(skin) {
-      return `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 43 5 36c2 7 6 10 13 11l-2 7h9l3-8h14l-2 8h9l2-13c4-3 6-8 4-14l-8-1-4-8H30l-4 8c-6 2-10 8-10 17Z" fill="${skin.bodyB}"/><path d="m19 32-4-7 8 3Z" fill="${skin.spikes[0]}"/><path d="m27 26-1-8 8 5Z" fill="${skin.spikes[1]}"/><path d="m37 22 4-8 5 10Z" fill="${skin.spikes[2]}"/><circle cx="46" cy="31" r="2.5" fill="#1d3150"/><path d="M40 40h15" stroke="${skin.snout}" stroke-width="3" stroke-linecap="round"/></svg>`;
+      const crest = skin.id === "godzilla" ? '<path d="m17 32-7-10 13 3Zm10-7-2-15 11 10Zm10-5 6-12 7 17Z" fill="#c9edc7"/>' :
+        `<path d="m19 32-4-7 8 3Z" fill="${skin.spikes[0]}"/><path d="m27 26-1-8 8 5Z" fill="${skin.spikes[1]}"/><path d="m37 22 4-8 5 10Z" fill="${skin.spikes[2]}"/>`;
+      const outline = skin.id === "godzilla" ? ' stroke="#91a09b" stroke-width="1.5"' : "";
+      const band = skin.id === "godzilla" ? "#a6b8ad" : "#e9cc91";
+      const eye = skin.id === "godzilla" ? "#f4d599" : "#1d3150";
+      const detail = skin.id === "godzilla" ? '<path d="M17 42c3-9 9-12 17-11-2 6-1 10 5 15H24Z" fill="#3c4547"/><path d="M30 25h14l3 6H29Z" fill="#515b5c"/><path d="m16 43-10-6c3 5 7 8 12 9Z" fill="#4a5454"/>' : "";
+      return `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 43 5 36c2 7 6 10 13 11l-2 7h9l3-8h14l-2 8h9l2-13c4-3 6-8 4-14l-8-1-4-8H30l-4 8c-6 2-10 8-10 17Z" fill="${skin.bodyB}"${outline}/>${detail}${crest}<path d="M38 26h16" stroke="${band}" stroke-width="3" stroke-linecap="round"/><circle cx="46" cy="31" r="2.5" fill="${eye}"/><path d="M40 40h15" stroke="${skin.snout}" stroke-width="3" stroke-linecap="round"/></svg>`;
     }
     function renderSkins() {
       skinGrid.innerHTML = skins.map(skin => {
         const unlocked = skinUnlocked(skin.id);
         const selected = skin.id === selectedSkinId;
         const label = unlocked ? (selected ? "已選擇" : "選用造型") :
-          skin.id === "cloud" ? "達成虹光起跑解鎖" : skin.id === "shield" ? "達成低空舞步解鎖" : "完成前六個成就解鎖";
+          skin.id === "cloud" ? "達成初入江湖解鎖" : skin.id === "shield" ? "達成伏影五閃解鎖" :
+            skin.id === "godzilla" ? "單局達 5000 分解鎖" : "完成前六個成就解鎖";
         return `<article class="skin-card ${selected ? "selected" : ""} ${unlocked ? "" : "locked"}">
           <div class="skin-portrait">${skinPortrait(skin)}</div><h4>${skin.name}</h4>
           <p><strong>${skin.ability}</strong><br>${skin.hint}</p>
@@ -208,45 +238,141 @@
       skillButton.disabled = state !== "running" || !canUse;
       skillButton.setAttribute("aria-label", `${skin.ability}，${skillStatusEl.textContent}`);
     }
-    function updateSoundButton() {
-      soundButton.textContent = muted ? "♪ 音效關閉" : "♫ 音效開啟";
-      soundButton.setAttribute("aria-pressed", String(!muted));
+    function updateAudioButtons() {
+      for (const [button, name, icon, enabled] of [
+        [musicButton, "背景音樂", "♬", musicEnabled], [soundButton, "音效", "♪", sfxEnabled]
+      ]) {
+        button.innerHTML = `<span aria-hidden="true">${icon}</span><span class="audio-label">${name === "背景音樂" ? "音樂" : name}${enabled ? "開啟" : "關閉"}</span>`;
+        button.setAttribute("aria-pressed", String(enabled));
+        button.setAttribute("aria-label", `${name}已${enabled ? "開啟，按下關閉" : "關閉，按下開啟"}`);
+      }
+    }
+    function stopMusic(reset = false) {
+      musicEpoch++;
+      musicPlaying = false;
+      for (const player of musicPlayers) {
+        try { player.pause(); } catch { /* 音樂為選用功能 */ }
+      }
+      if (reset) {
+        musicLeadIndex = 0; musicFading = false; musicFadeBlocked = false;
+        for (const [index, player] of musicPlayers.entries()) {
+          try { player.currentTime = 0; player.volume = index === 0 ? musicVolume : 0; } catch { /* 素材未載入仍可重玩 */ }
+        }
+      }
+    }
+    function startMusic() {
+      if (!musicEnabled || state !== "running" || musicPlaying) return;
+      const epoch = ++musicEpoch;
+      musicPlaying = true;
+      try {
+        const lead = musicPlayers[musicLeadIndex];
+        lead.loop = true;
+        if (!musicFading) lead.volume = musicVolume;
+        const result = lead.play();
+        if (result?.catch) result.catch(() => { if (epoch === musicEpoch) stopMusic(); });
+        if (musicFading) {
+          const incoming = musicPlayers[1 - musicLeadIndex];
+          incoming.loop = true;
+          try {
+            const nextResult = incoming.play();
+            if (nextResult?.catch) nextResult.catch(() => {
+              if (epoch === musicEpoch) {
+                musicFading = false; musicFadeBlocked = true;
+                incoming.pause(); lead.volume = musicVolume;
+              }
+            });
+          } catch {
+            musicFading = false; musicFadeBlocked = true;
+            incoming.pause(); lead.volume = musicVolume;
+          }
+        }
+      } catch { if (epoch === musicEpoch) stopMusic(); }
+    }
+    function updateMusic() {
+      if (!musicPlaying || !musicEnabled) return;
+      const lead = musicPlayers[musicLeadIndex];
+      const duration = lead.duration;
+      if (!Number.isFinite(duration) || duration <= musicCrossfadeSeconds + .5) return;
+      if (musicFadeBlocked && lead.currentTime < duration - musicCrossfadeSeconds - .2) musicFadeBlocked = false;
+      if (!musicFading && !musicFadeBlocked && lead.currentTime >= duration - musicCrossfadeSeconds) {
+        const outgoingIndex = musicLeadIndex;
+        const incomingIndex = 1 - outgoingIndex;
+        const incoming = musicPlayers[incomingIndex];
+        const epoch = musicEpoch;
+        try {
+          incoming.pause(); incoming.currentTime = 0; incoming.volume = 0; incoming.loop = true;
+          musicFading = true;
+          const result = incoming.play();
+          if (result?.catch) result.catch(() => {
+            if (epoch !== musicEpoch) return;
+            if (musicFading && musicLeadIndex === outgoingIndex) {
+              musicFading = false; musicFadeBlocked = true;
+              incoming.pause(); lead.volume = musicVolume;
+            } else if (musicLeadIndex === incomingIndex) {
+              incoming.pause(); incoming.volume = 0;
+              musicLeadIndex = outgoingIndex; musicFadeBlocked = true;
+              try {
+                lead.currentTime = 0; lead.volume = musicVolume;
+                const fallback = lead.play();
+                if (fallback?.catch) fallback.catch(() => { if (epoch === musicEpoch) stopMusic(); });
+              } catch { stopMusic(); }
+            }
+          });
+        } catch {
+          musicFading = false; musicFadeBlocked = true; lead.volume = musicVolume;
+        }
+      }
+      if (!musicFading) return;
+      const incoming = musicPlayers[1 - musicLeadIndex];
+      const progress = lead.currentTime < duration - musicCrossfadeSeconds - .2 ? 1 :
+        Math.max(0, Math.min(1, (lead.currentTime - (duration - musicCrossfadeSeconds)) / musicCrossfadeSeconds));
+      lead.volume = musicVolume * Math.cos(progress * Math.PI / 2);
+      incoming.volume = musicVolume * Math.sin(progress * Math.PI / 2);
+      if (progress >= .95) {
+        lead.pause();
+        try { lead.currentTime = 0; } catch { /* 已停止的音樂可在下輪再重設 */ }
+        lead.volume = 0; incoming.volume = musicVolume;
+        musicLeadIndex = 1 - musicLeadIndex;
+        musicFading = false; musicFadeBlocked = false;
+      }
     }
     function playAudio(element) {
-      if (muted) return;
+      if (!sfxEnabled) return;
       try {
         element.pause(); element.currentTime = 0;
         const result = element.play();
         if (result?.catch) result.catch(() => {});
       } catch { /* 瀏覽器拒絕播放時保持遊戲可用 */ }
     }
-    function playJump() {
-      if (muted) return;
+    function playActionClip(template, volume) {
+      if (!sfxEnabled) return;
+      let voice;
       try {
-        const AudioEngine = window.AudioContext || window.webkitAudioContext;
-        if (!AudioEngine) return;
-        audioContext ??= new AudioEngine();
-        if (audioContext.state === "suspended") void audioContext.resume().catch(() => {});
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        const now = audioContext.currentTime;
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(370, now);
-        oscillator.frequency.exponentialRampToValueAtTime(650, now + .13);
-        gain.gain.setValueAtTime(.065, now);
-        gain.gain.exponentialRampToValueAtTime(.001, now + .16);
-        oscillator.connect(gain).connect(audioContext.destination);
-        oscillator.start(now); oscillator.stop(now + .17);
-      } catch { /* 音效為選用功能 */ }
+        voice = template.cloneNode(true);
+        voice.preload = "auto";
+        voice.volume = volume;
+        const cleanup = () => actionVoices.delete(voice);
+        voice.addEventListener("ended", cleanup, { once: true });
+        voice.addEventListener("error", cleanup, { once: true });
+        actionVoices.add(voice);
+        const result = voice.play();
+        if (result?.catch) result.catch(cleanup);
+      } catch {
+        if (voice) actionVoices.delete(voice);
+        /* 音效無法播放時保持操作可用 */
+      }
     }
+    function playJump() { playActionClip(jumpSound, .88); }
+    function playDuck() { playActionClip(duckSound, .82); }
+    function playSkill() { playActionClip(skillSound, .84); }
 
     function setOverlay(mode) {
       overlay.hidden = mode === "running";
       if (mode === "running") return;
       const content = {
-        ready: ["🌈", "準備好出發了嗎？", "跳過地面障礙、蹲下閃開低空障礙，穿越四個場景。", "開始遊戲 →"],
+        ready: ["⚔", "準備闖蕩江湖了嗎？", "躍過路障、蹲下閃開飛行障礙，穿越四處江湖勝景。", "開始遊戲 →"],
         paused: ["⏸", "先喘口氣", "準備好了就繼續奔跑。", "繼續遊戲 →"],
-        over: ["✨", "這次跑得真不錯！", "再來一次，挑戰更遠的距離。", "再玩一次 →"]
+        over: ["✨", "這次跑得真不錯！", "點選下方「再玩一次」重新出發。", "再玩一次 →"]
       }[mode];
       document.getElementById("modalIcon").textContent = content[0];
       document.getElementById("modalTitle").textContent = content[1];
@@ -281,28 +407,32 @@
       player.jump = 0; player.velocity = 0; player.duck = false;
       runStats = { groundJumped: 0, birdsDucked: 0, passed: 0, skillUses: 0 };
       skillCooldown = 0; skillActive = 0; shieldCharges = 0; doubleJumpUsed = false;
+      beamRemaining = 0;
       activeSkinId = selectedSkinId;
       naturalSpeed = world.baseSpeed; speed = world.baseSpeed;
       updateHud();
     }
     function startGame() {
+      stopMusic(true);
       resetRun(); state = "running"; pauseButton.disabled = false;
       pauseButton.textContent = "暫停"; setOverlay("running");
-      updateHud(); renderCollection(); canvas.focus({ preventScroll: true });
+      updateHud(); renderCollection(); canvas.focus({ preventScroll: true }); startMusic();
     }
     function pauseGame() {
       if (state !== "running") return;
       state = "paused"; player.duck = false; keys.clear();
+      stopMusic();
       pauseButton.textContent = "繼續"; setOverlay("paused"); updateHud();
     }
     function resumeGame() {
       if (state !== "paused") return;
       state = "running"; lastTime = 0;
-      pauseButton.textContent = "暫停"; setOverlay("running"); updateHud(); canvas.focus({ preventScroll: true });
+      pauseButton.textContent = "暫停"; setOverlay("running"); updateHud(); canvas.focus({ preventScroll: true }); startMusic();
     }
     function endGame() {
       if (state !== "running") return;
-      state = "over"; player.duck = false; keys.clear(); pauseButton.disabled = true;
+      state = "over"; player.duck = false; keys.clear(); beamRemaining = 0; pauseButton.disabled = true;
+      stopMusic(true);
       checkAchievements(); saveRunProgress();
       if (score > best) {
         best = score; progressData.bestSkin = activeSkinId;
@@ -324,17 +454,28 @@
         if ((player.jump <= 0 && player.velocity <= 0) || doubleJumpUsed) return false;
         player.velocity = 520;
         doubleJumpUsed = true;
-        playJump();
+      } else if (skin.id === "godzilla") {
+        beamRemaining = reducedMotion.matches ? .12 : .35;
+        // 發動時先移除命中的障礙，避免下一畫格碰撞或計入閃避成就。
+        for (const item of obstacles) {
+          if (item.x >= player.x + 53 && item.x < world.width) item.neutralized = true;
+        }
+        obstacles = obstacles.filter(item => !item.neutralized);
       } else {
         skillActive = skin.duration;
         if (skin.id === "shield") shieldCharges = 1;
       }
       skillCooldown = skin.cooldown;
       runStats.skillUses++;
+      playSkill();
       checkAchievements(); renderAchievements(); updateHud();
       return true;
     }
-    function updateDuck() { player.duck = state === "running" && player.jump === 0 && keys.size > 0; }
+    function updateDuck() {
+      const wasDucking = player.duck;
+      player.duck = state === "running" && player.jump === 0 && player.velocity === 0 && keys.size > 0;
+      if (!wasDucking && player.duck) playDuck();
+    }
     function spawnObstacle() {
       let kind = "single";
       const roll = Math.random();
@@ -362,6 +503,7 @@
       elapsed += dt;
       skillCooldown = Math.max(0, skillCooldown - dt);
       skillActive = Math.max(0, skillActive - dt);
+      beamRemaining = Math.max(0, beamRemaining - dt);
       if (skillActive === 0) shieldCharges = 0;
       naturalSpeed = world.baseSpeed * (1 + Math.min(1.5, elapsed * .015));
       const skillMultiplier = skillActive > 0 && activeSkinId === "prism" ? 1.1 :
@@ -435,7 +577,7 @@
     }
     function drawCloud(x, y, scale) {
       ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
-      ctx.fillStyle = "rgba(221, 219, 255, .14)";
+      ctx.fillStyle = "rgba(235, 242, 224, .13)";
       ctx.beginPath(); ctx.ellipse(0, 0, 39, 13, 0, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(-17, -8, 17, 0, Math.PI * 2); ctx.arc(4, -16, 22, 0, Math.PI * 2);
       ctx.arc(24, -6, 16, 0, Math.PI * 2); ctx.fill(); ctx.restore();
@@ -449,29 +591,19 @@
       glow.addColorStop(0, `rgba(${scene.glow}, .28)`); glow.addColorStop(1, `rgba(${scene.glow}, 0)`);
       ctx.fillStyle = glow; ctx.fillRect(0, 0, w, h);
       const ambient = reducedMotion.matches ? 0 : distance;
-      if (index === 1) {
-        ctx.fillStyle = "rgba(255, 239, 194, .78)";
-        ctx.beginPath(); ctx.arc(w * .78, h * .22, 30, 0, Math.PI * 2); ctx.fill();
-      } else if (index === 3) {
-        ctx.save(); ctx.globalAlpha *= .29;
-        for (let band = 0; band < 3; band++) {
-          ctx.strokeStyle = ["#7affd0", "#b9a4ff", "#a7f4ff"][band]; ctx.lineWidth = 22 - band * 4;
-          ctx.beginPath(); ctx.moveTo(-30, 102 + band * 24);
-          ctx.bezierCurveTo(w * .25, 20 + band * 20, w * .6, 180 - band * 20, w + 30, 48 + band * 22); ctx.stroke();
-        }
-        ctx.restore();
-      }
-      if (index === 0 || index === 2 || index === 3) {
+      ctx.fillStyle = index === 1 ? "rgba(255, 226, 190, .86)" : "rgba(240, 238, 213, .83)";
+      ctx.beginPath(); ctx.arc(w * .78, h * .2, index === 1 ? 31 : 24, 0, Math.PI * 2); ctx.fill();
+      if (index === 0 || index === 3) {
         ctx.save(); ctx.globalAlpha *= index === 0 ? .55 : .68;
         for (let i = 0; i < 23; i++) {
           const x = ((i * 127 + 37) % 997) / 997 * w;
           const y = 65 + ((i * 71) % 133) / 180 * h;
-          ctx.fillStyle = index === 3 ? "#e5ffff" : i % 4 ? "#c9d5ff" : "#ffe4c3";
+          ctx.fillStyle = index === 3 ? "#edf5f0" : "#e1ecd1";
           ctx.beginPath(); ctx.arc(x, y, i % 6 ? 1 : 1.7, 0, Math.PI * 2); ctx.fill();
         }
         ctx.restore();
       }
-      if (index !== 2) clouds.forEach(cloud => {
+      clouds.forEach(cloud => {
         const span = w + 220;
         const x = ((cloud.x * w - ambient * cloud.rate + 120) % span + span) % span - 120;
         drawCloud(x, cloud.y * h, cloud.s);
@@ -484,11 +616,12 @@
       }
       ctx.lineTo(w, world.ground); ctx.fill();
       if (index === 2) {
-        ctx.fillStyle = "rgba(150, 211, 249, .24)";
-        for (let i = 0; i < 9; i++) {
-          const x = (i * 149 - ambient * .025) % (w + 160);
-          const y = world.ground - 46;
-          ctx.beginPath(); ctx.moveTo(x - 15, y); ctx.lineTo(x, y - 51 - i % 3 * 12); ctx.lineTo(x + 17, y); ctx.fill();
+        ctx.fillStyle = "rgba(219, 232, 224, .15)";
+        for (let i = 0; i < 7; i++) {
+          const x = ((i * 149 - ambient * .025) % (w + 160) + w + 160) % (w + 160);
+          ctx.beginPath(); ctx.moveTo(x - 24, world.ground - 46);
+          ctx.lineTo(x + 2, world.ground - 114 - i % 3 * 13);
+          ctx.lineTo(x + 25, world.ground - 46); ctx.fill();
         }
       }
       ctx.fillStyle = scene.near;
@@ -498,6 +631,52 @@
         ctx.lineTo(x, y);
       }
       ctx.lineTo(w, world.ground); ctx.fill();
+      if (index === 0) {
+        for (let i = 0; i < Math.ceil(w / 96) + 2; i++) {
+          const x = ((i * 96 - ambient * .045) % (w + 120) + w + 120) % (w + 120) - 30;
+          ctx.strokeStyle = "rgba(20, 56, 49, .75)"; ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.moveTo(x, world.ground); ctx.lineTo(x + 5, world.ground - 118 - i % 3 * 19); ctx.stroke();
+          ctx.strokeStyle = "rgba(197, 222, 176, .3)"; ctx.lineWidth = 2;
+          for (let joint = 0; joint < 3; joint++) {
+            const jy = world.ground - 35 - joint * 31;
+            ctx.beginPath(); ctx.moveTo(x - 4, jy); ctx.lineTo(x + 9, jy - 2); ctx.stroke();
+            ctx.fillStyle = "rgba(34, 92, 67, .85)";
+            ctx.beginPath(); ctx.moveTo(x + 4, jy); ctx.quadraticCurveTo(x + 24, jy - 21, x + 31, jy - 8);
+            ctx.quadraticCurveTo(x + 17, jy - 4, x + 4, jy); ctx.fill();
+          }
+        }
+      } else if (index === 1) {
+        ctx.fillStyle = "rgba(202, 223, 208, .28)";
+        ctx.fillRect(0, world.ground - 35, w, 28);
+        ctx.strokeStyle = "rgba(63, 59, 62, .8)"; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(0, world.ground - 26);
+        ctx.quadraticCurveTo(w * .5, world.ground - 79, w, world.ground - 26); ctx.stroke();
+        for (let i = 0; i < Math.ceil(w / 120) + 1; i++) {
+          const x = ((i * 120 - ambient * .04) % (w + 130) + w + 130) % (w + 130);
+          const y = world.ground - 20;
+          ctx.fillStyle = "#785d61"; ctx.fillRect(x, y - 37, 3, 37);
+          ctx.fillStyle = "#f5c4b0";
+          for (const [dx, dy] of [[-12, -41], [7, -54], [18, -38]]) {
+            ctx.beginPath(); ctx.arc(x + dx, y + dy, 11, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+      } else if (index === 2) {
+        const templeX = w * .73, ridgeY = world.ground - 68;
+        ctx.fillStyle = "#2b4653";
+        ctx.fillRect(templeX - 23, ridgeY - 31, 46, 31);
+        ctx.beginPath(); ctx.moveTo(templeX - 38, ridgeY - 30);
+        ctx.lineTo(templeX, ridgeY - 49); ctx.lineTo(templeX + 38, ridgeY - 30); ctx.fill();
+        ctx.fillStyle = "#d3c59e"; ctx.fillRect(templeX - 3, ridgeY - 21, 6, 21);
+      } else {
+        ctx.fillStyle = "#284554";
+        ctx.fillRect(w * .6, world.ground - 72, w * .36, 64);
+        for (let i = 0; i < 5; i++) {
+          const x = w * .6 + i * w * .08;
+          ctx.fillRect(x, world.ground - 86, 20, 14);
+        }
+        ctx.fillStyle = "rgba(238, 246, 240, .78)";
+        ctx.fillRect(w * .6, world.ground - 74, w * .36, 5);
+      }
       if (index === 1) {
         for (let i = 0; i < 15; i++) {
           const x = ((i * 113 - ambient * .06) % (w + 80) + w + 80) % (w + 80);
@@ -514,11 +693,24 @@
       ctx.fillStyle = ground; ctx.fillRect(0, y, w, h - y);
       ctx.fillStyle = scene.line; ctx.fillRect(0, y, w, 3);
       ctx.fillStyle = `rgba(${scene.glow}, .14)`; ctx.fillRect(0, y + 3, w, 9);
-      const offset = distance % 66;
+      const offset = distance % (index === 1 ? 82 : 66);
       ctx.fillStyle = scene.track;
-      for (let x = -offset; x < w + 70; x += 66) roundRect(x, y + 28, 27, 3, 2, ctx.fillStyle);
-      ctx.fillStyle = "rgba(236, 240, 255, .09)";
-      for (let x = 24 - offset * .45; x < w + 80; x += 94) roundRect(x, y + 71, 34, 2, 2, ctx.fillStyle);
+      for (let x = -offset; x < w + 84; x += index === 1 ? 82 : 66) {
+        if (index === 0) {
+          roundRect(x, y + 25, 35, 7, 3, ctx.fillStyle);
+          roundRect(x + 12, y + 67, 28, 5, 2, ctx.fillStyle);
+        } else if (index === 1) {
+          roundRect(x, y + 21, 65, 5, 2, ctx.fillStyle);
+          roundRect(x + 2, y + 62, 62, 4, 2, ctx.fillStyle);
+        } else if (index === 2) {
+          ctx.beginPath(); ctx.moveTo(x, y + 27); ctx.lineTo(x + 29, y + 24);
+          ctx.lineTo(x + 32, y + 30); ctx.lineTo(x + 4, y + 33); ctx.fill();
+          roundRect(x + 18, y + 66, 24, 3, 2, ctx.fillStyle);
+        } else {
+          roundRect(x, y + 28, 34, 6, 3, ctx.fillStyle);
+          roundRect(x + 14, y + 68, 32, 4, 2, ctx.fillStyle);
+        }
+      }
     }
     function drawScene(index) { drawBackground(index); drawGround(index); }
     function drawTrail() {
@@ -534,131 +726,192 @@
       }
       ctx.restore();
     }
-    function drawCactus(item) {
+    function drawBambooStake(item) {
       const x = item.x, y = world.ground, double = item.kind === "double";
       ctx.save();
-      ctx.fillStyle = "rgba(4, 12, 23, .18)";
-      ctx.beginPath(); ctx.ellipse(x + item.width / 2, y + 5, item.width * .58, 5, 0, 0, Math.PI * 2); ctx.fill();
-      function stem(sx, height, scale) {
-        const green = ctx.createLinearGradient(sx, 0, sx + 22 * scale, 0);
-        green.addColorStop(0, "#61d6a7"); green.addColorStop(1, "#a0efaa");
-        roundRect(sx + 5 * scale, y - height, 19 * scale, height, 9 * scale, green);
-        roundRect(sx, y - height * .7, 9 * scale, height * .28, 5 * scale, green);
-        roundRect(sx + 17 * scale, y - height * .54, 10 * scale, height * .23, 5 * scale, green);
-        ctx.fillStyle = "rgba(255,255,255,.23)";
-        roundRect(sx + 9 * scale, y - height + 10, 3 * scale, height - 19, 2, ctx.fillStyle);
-      }
-      if (double) { stem(x, 55, .9); stem(x + 26, 43, .83); }
-      else stem(x + 1, 55, 1);
-      ctx.restore();
-    }
-    function drawBird(item) {
-      const x = item.x, y = world.ground - 53;
-      const flap = reducedMotion.matches ? 0 : Math.sin(elapsed * 17 + x * .02) * 7;
-      ctx.save(); ctx.translate(x, y);
-      ctx.fillStyle = "#aaa6f6";
-      ctx.beginPath(); ctx.moveTo(14, -2); ctx.quadraticCurveTo(22, -23 - flap, 38, -14 - flap);
-      ctx.quadraticCurveTo(29, -1, 21, 6); ctx.fill();
-      ctx.fillStyle = "#e4b5d9";
-      ctx.beginPath(); ctx.moveTo(17, 5); ctx.quadraticCurveTo(27, 17 + flap, 42, 10 + flap);
-      ctx.quadraticCurveTo(29, 1, 21, -1); ctx.fill();
-      ctx.fillStyle = "#ddd0f5";
-      ctx.beginPath(); ctx.ellipse(21, 0, 19, 12, -.1, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#7676be";
-      ctx.beginPath(); ctx.moveTo(6, -2); ctx.lineTo(-1, 3); ctx.lineTo(7, 6); ctx.fill();
-      ctx.fillStyle = "#202348"; ctx.beginPath(); ctx.arc(32, -4, 2.2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ffd795";
-      ctx.beginPath(); ctx.moveTo(38, 1); ctx.lineTo(49, 4); ctx.lineTo(38, 7); ctx.fill();
-      ctx.restore();
-    }
-    function drawFlower(item) {
-      const x = item.x, y = world.ground;
-      ctx.save();
-      const blossom = (left, scale) => {
-        ctx.strokeStyle = "#78d3a7"; ctx.lineWidth = 7 * scale;
-        ctx.beginPath(); ctx.moveTo(left + 14 * scale, y); ctx.quadraticCurveTo(left + 9 * scale, y - 26 * scale, left + 15 * scale, y - 42 * scale); ctx.stroke();
-        ctx.fillStyle = "#f89eae";
-        for (let i = 0; i < 5; i++) {
-          const angle = i * Math.PI * 2 / 5;
-          ctx.beginPath(); ctx.ellipse(left + 15 * scale + Math.cos(angle) * 9 * scale, y - 43 * scale + Math.sin(angle) * 9 * scale, 7 * scale, 11 * scale, angle, 0, Math.PI * 2); ctx.fill();
+      function stake(sx, height, scale) {
+        const width = 19 * scale;
+        ctx.lineWidth = 2.8;
+        roundRect(sx + 4 * scale, y - height, width, height, 3, "#8fc2a0", "#1b3531");
+        ctx.fillStyle = "#f1d9a7";
+        ctx.beginPath(); ctx.moveTo(sx + 4 * scale, y - height);
+        ctx.lineTo(sx + 13 * scale, y - height - 7 * scale);
+        ctx.lineTo(sx + 23 * scale, y - height); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#1b3531"; ctx.lineWidth = 2.4; ctx.stroke();
+        ctx.strokeStyle = "#f3dba9"; ctx.lineWidth = 2.6;
+        ctx.beginPath(); ctx.moveTo(sx + 8 * scale, y - height + 4);
+        ctx.lineTo(sx + 8 * scale, y - 5); ctx.stroke();
+        ctx.strokeStyle = "#254d3d"; ctx.lineWidth = 2.2;
+        for (let joint = 1; joint < 4; joint++) {
+          const jy = y - height + joint * height / 4;
+          ctx.beginPath(); ctx.moveTo(sx + 5 * scale, jy);
+          ctx.lineTo(sx + 22 * scale, jy); ctx.stroke();
         }
-        ctx.fillStyle = "#ffe5a1"; ctx.beginPath(); ctx.arc(left + 15 * scale, y - 43 * scale, 7 * scale, 0, Math.PI * 2); ctx.fill();
-      };
-      if (item.kind === "double") { blossom(x, .96); blossom(x + 25, .78); }
-      else blossom(x, 1);
+        ctx.fillStyle = "#5e9b76";
+        ctx.beginPath(); ctx.moveTo(sx + width, y - height * .68);
+        ctx.lineTo(sx + width + 8 * scale, y - height * .79);
+        ctx.lineTo(sx + width + 5 * scale, y - height * .57); ctx.closePath();
+        ctx.fill(); ctx.strokeStyle = "#1b3531"; ctx.stroke();
+      }
+      if (double) { stake(x, 50, .9); stake(x + 26, 41, .83); }
+      else stake(x + 1, 49, 1);
       ctx.restore();
     }
-    function drawCrystal(item) {
+    function drawStoneLantern(item) {
       const x = item.x, y = world.ground;
       ctx.save();
-      const shard = (left, width, height) => {
-        ctx.fillStyle = "#9ee7f6";
-        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + width * .15, y - height * .62);
-        ctx.lineTo(left + width * .5, y - height); ctx.lineTo(left + width * .86, y - height * .58);
-        ctx.lineTo(left + width, y); ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,.42)";
-        ctx.beginPath(); ctx.moveTo(left + width * .5, y - height); ctx.lineTo(left + width * .5, y);
-        ctx.lineTo(left + width * .15, y - height * .62); ctx.fill();
+      const lantern = (left, height, scale) => {
+        ctx.lineWidth = 2.7;
+        roundRect(left + 4 * scale, y - 8 * scale, 25 * scale, 8 * scale, 2, "#71645d", "#252b2e");
+        roundRect(left + 11 * scale, y - height + 25 * scale, 10 * scale, height - 32 * scale, 2, "#b5a396", "#252b2e");
+        roundRect(left + 5 * scale, y - height + 12 * scale, 23 * scale, 22 * scale, 3, "#e5c9a3", "#252b2e");
+        roundRect(left + 10 * scale, y - height + 16 * scale, 12 * scale, 12 * scale, 2, "#ffe4a9", "#765044");
+        ctx.fillStyle = "#796b64";
+        ctx.beginPath(); ctx.moveTo(left, y - height + 13 * scale);
+        ctx.lineTo(left + 16 * scale, y - height);
+        ctx.lineTo(left + 32 * scale, y - height + 13 * scale); ctx.closePath();
+        ctx.fill(); ctx.strokeStyle = "#252b2e"; ctx.stroke();
+        ctx.strokeStyle = "#f5d7a4"; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.moveTo(left + 5 * scale, y - height + 11 * scale);
+        ctx.lineTo(left + 16 * scale, y - height + 2 * scale);
+        ctx.lineTo(left + 27 * scale, y - height + 11 * scale); ctx.stroke();
       };
-      if (item.kind === "double") { shard(x, 28, 57); shard(x + 24, 30, 45); }
-      else shard(x, 31, 56);
+      if (item.kind === "double") { lantern(x, 55, .9); lantern(x + 27, 42, .8); }
+      else lantern(x, 54, 1);
       ctx.restore();
     }
-    function drawIce(item) {
+    function drawSwordStone(item) {
       const x = item.x, y = world.ground;
       ctx.save();
-      const spire = (left, width, height) => {
-        ctx.fillStyle = "#a3e2f1";
-        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + width * .5, y - height);
-        ctx.lineTo(left + width, y); ctx.fill();
-        ctx.fillStyle = "#e6fcff";
-        ctx.beginPath(); ctx.moveTo(left + width * .5, y - height); ctx.lineTo(left + width * .5, y);
-        ctx.lineTo(left + width * .2, y); ctx.fill();
+      const stone = (left, width, height) => {
+        ctx.fillStyle = "#aebcb0";
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + 3, y - height * .62);
+        ctx.lineTo(left + width * .5, y - height * .75);
+        ctx.lineTo(left + width - 3, y - height * .57);
+        ctx.lineTo(left + width, y); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#263737"; ctx.lineWidth = 3; ctx.stroke();
+        ctx.strokeStyle = "#f2d9ab"; ctx.lineWidth = 2.7;
+        ctx.beginPath(); ctx.moveTo(left + 5, y - height * .58);
+        ctx.lineTo(left + width * .5, y - height * .7); ctx.stroke();
+        ctx.strokeStyle = "#f1efd1"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(left + width * .5, y - height * .64);
+        ctx.lineTo(left + width * .5, y - height); ctx.stroke();
+        ctx.strokeStyle = "#263737"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(left + 6, y - height * .64);
+        ctx.lineTo(left + width - 6, y - height * .64); ctx.stroke();
+        ctx.strokeStyle = "#f0d5a1"; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(left + 6, y - height * .64);
+        ctx.lineTo(left + width - 6, y - height * .64); ctx.stroke();
       };
-      if (item.kind === "double") { spire(x, 28, 57); spire(x + 25, 29, 45); }
-      else spire(x, 31, 56);
+      if (item.kind === "double") { stone(x, 28, 57); stone(x + 26, 28, 45); }
+      else stone(x, 31, 56);
+      ctx.restore();
+    }
+    function drawSnowBarricade(item) {
+      const x = item.x, y = world.ground;
+      ctx.save();
+      const barricade = (left, width, height) => {
+        ctx.lineWidth = 2.8;
+        roundRect(left + 2, y - height + 7, width - 4, height - 7, 3, "#a17a62", "#253238");
+        ctx.strokeStyle = "#493d3a"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(left + 6, y - height + 14);
+        ctx.lineTo(left + width - 6, y - 9);
+        ctx.moveTo(left + width - 6, y - height + 14);
+        ctx.lineTo(left + 6, y - 9); ctx.stroke();
+        ctx.strokeStyle = "#f2d3a1"; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(left + 6, y - height + 14);
+        ctx.lineTo(left + width - 6, y - 9); ctx.stroke();
+        ctx.lineWidth = 2.8;
+        roundRect(left, y - height, width, 10, 5, "#f0f5eb", "#253238");
+      };
+      if (item.kind === "double") { barricade(x, 27, 56); barricade(x + 26, 28, 44); }
+      else barricade(x, 31, 56);
       ctx.restore();
     }
     function drawAirHazard(item) {
       const scene = item.scene ?? 0;
-      if (scene === 0) { drawBird(item); return; }
       const x = item.x, y = world.ground - 67;
       ctx.save(); ctx.translate(x, y);
-      if (scene === 1) {
-        const flutter = reducedMotion.matches ? 0 : Math.sin(elapsed * 17 + x * .02) * 3;
-        ctx.fillStyle = "rgba(210, 249, 255, .78)";
-        for (const [wx, wy] of [[18, 5 + flutter], [31, 5 - flutter], [18, 26 - flutter], [31, 26 + flutter]]) {
-          ctx.beginPath(); ctx.ellipse(wx, wy, 13, 6, -.2, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = "rgba(9, 23, 25, .48)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      if (scene === 0) {
+        ctx.strokeStyle = "#203d3d"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(5, 20); ctx.lineTo(45, 11); ctx.stroke();
+        ctx.strokeStyle = "#e4f3ce"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(5, 20); ctx.lineTo(45, 11); ctx.stroke();
+        for (const [lx, ly] of [[10, 16], [26, 12], [37, 9]]) {
+          ctx.fillStyle = "#b9e6c9";
+          ctx.beginPath(); ctx.moveTo(lx, ly);
+          ctx.quadraticCurveTo(lx + 10, ly - 13, lx + 13, ly - 4);
+          ctx.quadraticCurveTo(lx + 11, ly + 4, lx, ly); ctx.closePath();
+          ctx.fill(); ctx.strokeStyle = "#203d3d"; ctx.lineWidth = 2.6; ctx.stroke();
+          ctx.strokeStyle = "#e7f7df"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(lx + 3, ly - 2);
+          ctx.quadraticCurveTo(lx + 9, ly - 10, lx + 11, ly - 5); ctx.stroke();
         }
-        roundRect(10, 14, 34, 7, 4, "#7bddc7");
-        ctx.fillStyle = "#ffe7a8"; ctx.beginPath(); ctx.arc(43, 17, 5, 0, Math.PI * 2); ctx.fill();
+      } else if (scene === 1) {
+        ctx.fillStyle = "#d9e8d3";
+        ctx.beginPath(); ctx.moveTo(26, 2); ctx.lineTo(45, 16);
+        ctx.lineTo(26, 29); ctx.lineTo(7, 16); ctx.closePath();
+        ctx.fill(); ctx.strokeStyle = "#233a3b"; ctx.lineWidth = 3.2; ctx.stroke();
+        ctx.fillStyle = "#91c8b4";
+        ctx.beginPath(); ctx.moveTo(26, 2); ctx.lineTo(45, 16);
+        ctx.lineTo(26, 16); ctx.fill();
+        ctx.strokeStyle = "#f2f8e6"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(26, 4); ctx.lineTo(42, 16);
+        ctx.lineTo(26, 27); ctx.lineTo(10, 16); ctx.closePath(); ctx.stroke();
+        ctx.strokeStyle = "#375e58"; ctx.lineWidth = 2.3;
+        ctx.beginPath(); ctx.moveTo(26, 4); ctx.lineTo(26, 29);
+        ctx.moveTo(8, 16); ctx.lineTo(44, 16); ctx.stroke();
+        ctx.strokeStyle = "#e2f3d4"; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.moveTo(26, 28); ctx.quadraticCurveTo(34, 35, 42, 31); ctx.stroke();
       } else if (scene === 2) {
-        ctx.fillStyle = "rgba(121, 223, 251, .28)";
-        ctx.beginPath(); ctx.ellipse(25, 17, 25, 16, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#9be9ff";
-        ctx.beginPath(); ctx.moveTo(25, 1); ctx.lineTo(44, 16); ctx.lineTo(25, 33); ctx.lineTo(7, 16); ctx.fill();
-        ctx.fillStyle = "#e4fbff";
-        ctx.beginPath(); ctx.moveTo(25, 1); ctx.lineTo(25, 33); ctx.lineTo(7, 16); ctx.fill();
+        ctx.fillStyle = "rgba(224, 244, 222, .65)";
+        ctx.beginPath(); ctx.ellipse(25, 17, 25, 15, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.strokeStyle = "#294545"; ctx.lineWidth = 2.8; ctx.stroke();
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#20383b"; ctx.lineWidth = 11;
+        ctx.beginPath(); ctx.moveTo(5, 25); ctx.quadraticCurveTo(23, 2, 47, 8); ctx.stroke();
+        ctx.strokeStyle = "#b9e9d1"; ctx.lineWidth = 6.5;
+        ctx.beginPath(); ctx.moveTo(5, 25); ctx.quadraticCurveTo(23, 2, 47, 8); ctx.stroke();
+        ctx.strokeStyle = "#f3f9e9"; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.moveTo(7, 22); ctx.quadraticCurveTo(24, 6, 42, 8); ctx.stroke();
       } else {
-        ctx.fillStyle = "#e8f9ff";
-        ctx.beginPath(); ctx.ellipse(26, 19, 17, 13, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#b0d9ec";
-        ctx.beginPath(); ctx.ellipse(12, 19, 12, 7, -.25, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(40, 19, 11, 7, .25, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#315270";
-        for (const ex of [21, 32]) { ctx.beginPath(); ctx.arc(ex, 15, 2, 0, Math.PI * 2); ctx.fill(); }
-        ctx.fillStyle = "#f6dba0";
-        ctx.beginPath(); ctx.moveTo(25, 20); ctx.lineTo(29, 20); ctx.lineTo(27, 25); ctx.fill();
+        const flap = reducedMotion.matches ? 0 : Math.sin(elapsed * 15 + x * .02) * 3;
+        ctx.fillStyle = "#d9f1df";
+        ctx.beginPath(); ctx.ellipse(26, 19, 17, 13, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.strokeStyle = "#233b41"; ctx.lineWidth = 2.8; ctx.stroke();
+        ctx.fillStyle = "#a5d4c3";
+        ctx.beginPath(); ctx.moveTo(19, 15); ctx.quadraticCurveTo(8, 1 + flap, 3, 11);
+        ctx.lineTo(11, 27); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(34, 15); ctx.quadraticCurveTo(43, 1 - flap, 49, 10);
+        ctx.lineTo(42, 27); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = "#eef9e7"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(4, 11); ctx.quadraticCurveTo(9, 6 + flap, 16, 15);
+        ctx.moveTo(37, 15); ctx.quadraticCurveTo(44, 5 - flap, 48, 10); ctx.stroke();
+        ctx.fillStyle = "#324b56";
+        ctx.beginPath(); ctx.arc(32, 16, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#e6ddb0";
+        ctx.beginPath(); ctx.moveTo(40, 18); ctx.lineTo(49, 21);
+        ctx.lineTo(40, 24); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#233b41"; ctx.lineWidth = 1.8; ctx.stroke();
       }
       ctx.restore();
     }
     function drawObstacle(item) {
       if (item.kind === "bird") { drawAirHazard(item); return; }
+      ctx.save();
+      ctx.fillStyle = "rgba(11, 27, 29, .28)";
+      ctx.beginPath();
+      ctx.ellipse(item.x + item.width / 2, world.ground + 2, item.width * .47, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       switch (item.scene ?? 0) {
-        case 1: drawFlower(item); break;
-        case 2: drawCrystal(item); break;
-        case 3: drawIce(item); break;
-        default: drawCactus(item);
+        case 1: drawStoneLantern(item); break;
+        case 2: drawSwordStone(item); break;
+        case 3: drawSnowBarricade(item); break;
+        default: drawBambooStake(item);
       }
     }
     function drawIncomingWarning(item) {
@@ -666,8 +919,8 @@
       const airborne = item.kind === "bird";
       const y = world.ground - (airborne ? 99 : 79);
       ctx.save();
-      roundRect(world.width - 37, y, 31, 30, 10, "rgba(21, 28, 58, .85)", airborne ? "#c7d7ff" : "#ffe4a5");
-      ctx.fillStyle = airborne ? "#e7edff" : "#fff0c5";
+      roundRect(world.width - 37, y, 31, 30, 10, "rgba(18, 43, 42, .88)", airborne ? "#c9e3d7" : "#eed4a8");
+      ctx.fillStyle = airborne ? "#e9f3e8" : "#fff0d4";
       ctx.font = "bold 19px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(airborne ? "↓" : "↑", world.width - 21, y + 15);
       ctx.restore();
@@ -689,32 +942,63 @@
         ctx.beginPath(); ctx.moveTo(9, -19); ctx.lineTo(-12, -24); ctx.lineTo(2, -12); ctx.fill();
         roundRect(2, -29, 55, 27, 13, body);
         roundRect(37, -32, 25, 22, 9, body);
+        if (activeSkinId === "godzilla") {
+          ctx.lineWidth = 1.6;
+          roundRect(2, -29, 55, 27, 13, null, "#899894");
+          roundRect(37, -32, 25, 22, 9, null, "#899894");
+          ctx.strokeStyle = "#778884";
+          ctx.beginPath(); ctx.moveTo(8, -12); ctx.lineTo(35, -12); ctx.stroke();
+        }
         for (let i = 0; i < 4; i++) {
           ctx.fillStyle = skin.spikes[i]; ctx.beginPath();
-          ctx.moveTo(8 + i * 10, -28); ctx.lineTo(13 + i * 10, -37); ctx.lineTo(19 + i * 10, -28); ctx.fill();
+          ctx.moveTo(8 + i * 10, -28); ctx.lineTo(13 + i * 10, activeSkinId === "godzilla" ? -42 : -37);
+          ctx.lineTo(19 + i * 10, -28); ctx.fill();
         }
-        ctx.fillStyle = "#20294d"; ctx.beginPath(); ctx.arc(52, -24, 2.4, 0, Math.PI * 2); ctx.fill();
+        roundRect(39, -29, 20, 3, 2, activeSkinId === "godzilla" ? "#9fb5ac" : "#e4c992");
+        ctx.fillStyle = activeSkinId === "godzilla" ? "#f1d29b" : "#20294d";
+        ctx.beginPath(); ctx.arc(52, -24, 2.4, 0, Math.PI * 2); ctx.fill();
         roundRect(15, -5, 16, 6, 3, skin.legs); roundRect(39, -5, 15, 6, 3, skin.legs);
       } else {
         const step = player.jump > 0 || state !== "running" || reducedMotion.matches ? 0 : Math.sin(elapsed * 22) * 5;
+        if (activeSkinId !== "godzilla") {
+          ctx.fillStyle = activeSkinId === "cloud" ? "rgba(224, 238, 244, .8)" :
+            activeSkinId === "shield" ? "rgba(202, 168, 208, .78)" : "rgba(217, 190, 140, .78)";
+          ctx.beginPath(); ctx.moveTo(12, -42); ctx.quadraticCurveTo(-3, -26, -18, -15);
+          ctx.lineTo(17, -19); ctx.fill();
+        }
         ctx.fillStyle = skin.tail;
         ctx.beginPath(); ctx.moveTo(12, -35); ctx.quadraticCurveTo(-8, -38, -16, -26);
         ctx.quadraticCurveTo(-3, -29, 6, -19); ctx.fill();
+        if (activeSkinId === "godzilla") {
+          ctx.strokeStyle = "#84948f"; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.moveTo(12, -35); ctx.quadraticCurveTo(-8, -38, -16, -26); ctx.stroke();
+        }
         roundRect(10, -15 + step, 11, 16 - Math.max(step, 0), 5, skin.legs);
         roundRect(31, -15 - step, 11, 16 + Math.min(step, 0), 5, skin.legs);
         roundRect(3, -46, 43, 37, 17, body);
         roundRect(32, -57, 17, 33, 8, body);
         roundRect(30, -66, 35, 28, 11, body);
         roundRect(43, -43, 23, 10, 5, skin.snout);
+        if (activeSkinId === "godzilla") {
+          ctx.lineWidth = 1.6;
+          roundRect(3, -46, 43, 37, 17, null, "#899894");
+          roundRect(30, -66, 35, 28, 11, null, "#9baaa1");
+          roundRect(43, -43, 23, 10, 5, null, "#899894");
+        }
         for (let i = 0; i < 5; i++) {
           ctx.fillStyle = skin.spikes[i]; ctx.beginPath();
-          ctx.moveTo(4 + i * 8, -43 - i * 2); ctx.lineTo(9 + i * 8, -54 - i * 2);
+          ctx.moveTo(4 + i * 8, -43 - i * 2);
+          ctx.lineTo(9 + i * 8, (activeSkinId === "godzilla" ? -62 : -54) - i * 2);
           ctx.lineTo(16 + i * 8, -44 - i * 2); ctx.fill();
         }
-        ctx.fillStyle = activeSkinId === "shield" ? "#f5d9f5" : "#f3d39b";
+        ctx.fillStyle = activeSkinId === "shield" ? "#f5d9f5" : activeSkinId === "godzilla" ? "#586568" : "#f3d39b";
         ctx.beginPath(); ctx.ellipse(29, -25, 14, 11, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#1b3150"; ctx.beginPath(); ctx.arc(53, -55, 2.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = activeSkinId === "godzilla" ? "#f1d29b" : "#1b3150";
+        ctx.beginPath(); ctx.arc(53, -55, 2.8, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.beginPath(); ctx.arc(54, -56, .8, 0, Math.PI * 2); ctx.fill();
+        roundRect(31, -62, 30, 4, 2, activeSkinId === "godzilla" ? "#a8b9af" : "#e8c98e");
+        ctx.fillStyle = activeSkinId === "godzilla" ? "#a8b9af" : "#e8c98e";
+        ctx.beginPath(); ctx.moveTo(57, -60); ctx.lineTo(68, -53); ctx.lineTo(57, -55); ctx.fill();
         if (activeSkinId === "cloud") {
           ctx.fillStyle = "rgba(255,255,255,.88)";
           for (const [cx, cy, r] of [[36, -69, 5], [43, -71, 7], [50, -68, 5]]) {
@@ -733,6 +1017,29 @@
       }
       ctx.restore();
     }
+    function drawBeam() {
+      if (beamRemaining <= 0 || activeSkinId !== "godzilla") return;
+      const startX = player.x + 61;
+      const beamY = world.ground - player.jump - (player.duck ? 24 : 48);
+      const length = Math.max(0, world.width - startX);
+      ctx.save();
+      if (reducedMotion.matches) {
+        roundRect(startX, beamY - 3, length, 6, 3, "#e6f5d5");
+      } else {
+        const strength = Math.min(1, beamRemaining / .12);
+        ctx.globalAlpha = strength;
+        const glow = ctx.createLinearGradient(startX, beamY, world.width, beamY);
+        glow.addColorStop(0, "rgba(221, 250, 201, .94)");
+        glow.addColorStop(1, "rgba(162, 231, 190, .13)");
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.moveTo(startX, beamY - 10);
+        ctx.lineTo(world.width, beamY - 16);
+        ctx.lineTo(world.width, beamY + 16);
+        ctx.lineTo(startX, beamY + 10); ctx.fill();
+        roundRect(startX, beamY - 3, length, 6, 3, "rgba(248, 255, 225, .88)");
+      }
+      ctx.restore();
+    }
     function render() {
       ctx.clearRect(0, 0, world.width, world.height);
       if (previousSceneIndex !== null && sceneFadeRemaining > 0) {
@@ -743,18 +1050,20 @@
       drawTrail();
       for (const item of obstacles) { drawIncomingWarning(item); drawObstacle(item); }
       drawDino();
+      drawBeam();
     }
     function frame(timestamp) {
       const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, .033) : 0;
       lastTime = timestamp;
       if (state === "running") update(dt);
+      if (state === "running") updateMusic();
       render();
       requestAnimationFrame(frame);
     }
     function action() {
-      if (state === "ready" || state === "over") startGame();
+      if (state === "ready") startGame();
       else if (state === "paused") resumeGame();
-      else jump();
+      else if (state === "running") jump();
     }
     document.addEventListener("keydown", event => {
       if (event.target?.closest?.("button")) return;
@@ -771,13 +1080,24 @@
     });
     window.addEventListener("blur", () => { keys.clear(); player.duck = false; pauseGame(); });
     document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });
-    mainButton.addEventListener("click", action);
+    mainButton.addEventListener("click", () => state === "over" ? startGame() : action());
     canvas.addEventListener("pointerdown", event => { if (event.pointerType !== "mouse" || event.button === 0) action(); });
     pauseButton.addEventListener("click", () => state === "running" ? pauseGame() : resumeGame());
+    musicButton.addEventListener("click", () => {
+      musicEnabled = !musicEnabled;
+      writeStore("rainbowDino.musicEnabled.v1", musicEnabled ? "1" : "0");
+      if (musicEnabled) startMusic(); else stopMusic();
+      updateAudioButtons();
+      if (state === "running") canvas.focus({ preventScroll: true });
+    });
     soundButton.addEventListener("click", () => {
-      muted = !muted;
-      if (muted) { milestoneSound.pause(); hitSound.pause(); }
-      writeStore("rainbowDino.muted.v1", muted ? "1" : "0"); updateSoundButton();
+      sfxEnabled = !sfxEnabled;
+      if (!sfxEnabled) {
+        milestoneSound.pause(); hitSound.pause();
+        for (const voice of actionVoices) voice.pause();
+        actionVoices.clear();
+      }
+      writeStore("rainbowDino.sfxEnabled.v1", sfxEnabled ? "1" : "0"); updateAudioButtons();
       if (state === "running") canvas.focus({ preventScroll: true });
     });
     const jumpButton = document.getElementById("jumpButton");
@@ -800,5 +1120,5 @@
       saveProgress(); renderCollection();
     });
     window.addEventListener("resize", resize);
-    saveProgress(); updateSoundButton(); resize(); setOverlay("ready"); renderCollection(); requestAnimationFrame(frame);
+    saveProgress(); updateAudioButtons(); resize(); setOverlay("ready"); renderCollection(); requestAnimationFrame(frame);
   })();
