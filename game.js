@@ -16,7 +16,14 @@
     const musicPlayers = [document.getElementById("musicA"), document.getElementById("musicB")];
     const scoreEl = document.getElementById("score");
     const bestEl = document.getElementById("best");
+    const bestLabelEl = document.getElementById("bestLabel");
     const speedEl = document.getElementById("speed");
+    const speedLabelEl = document.getElementById("speedLabel");
+    const modePicker = document.getElementById("modePicker");
+    const modePickerLabel = document.getElementById("modePickerLabel");
+    const normalModeButton = document.getElementById("normalModeButton");
+    const hardModeButton = document.getElementById("hardModeButton");
+    const runBestLabel = document.getElementById("runBestLabel");
     const sceneEl = document.getElementById("sceneName");
     const skillStatusEl = document.getElementById("skillStatus");
     const skillNameEl = document.getElementById("skillName");
@@ -100,8 +107,23 @@
     function writeStore(key, value) {
       try { localStorage.setItem(key, String(value)); } catch { /* 私密模式仍可遊玩 */ }
     }
-    const storedBest = Number(readStore("rainbowDino.best.v1", "0"));
-    let best = Number.isFinite(storedBest) ? Math.max(0, Math.floor(storedBest)) : 0;
+    function validScore(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : 0;
+    }
+    function loadHardRecord() {
+      try {
+        const saved = JSON.parse(readStore("rainbowDino.hardRecord.v1", "{}"));
+        return { score: validScore(saved?.score), skin: skins.some(item => item.id === saved?.skin) ? saved.skin : null };
+      } catch { return { score: 0, skin: null }; }
+    }
+    let normalBest = validScore(readStore("rainbowDino.best.v1", "0"));
+    let hardRecord = loadHardRecord();
+    const storedMode = readStore("rainbowDino.mode.v1", "normal");
+    let selectedModeId = storedMode === "hard" ? "hard" : "normal";
+    let activeModeId = selectedModeId;
+    function modeBest(id) { return id === "hard" ? hardRecord.score : normalBest; }
+    let best = modeBest(selectedModeId);
     const legacyAudioDefault = readStore("rainbowDino.muted.v1", "0") === "1" ? "0" : "1";
     let musicEnabled = readStore("rainbowDino.musicEnabled.v1", legacyAudioDefault) === "1";
     let sfxEnabled = readStore("rainbowDino.sfxEnabled.v1", legacyAudioDefault) === "1";
@@ -117,10 +139,11 @@
       } catch { return { completed: {}, bestRun: {}, selectedSkin: "prism", bestSkin: null }; }
     }
     const progressData = loadProgress();
-    if (best >= 100) progressData.completed.first100 = true;
-    if (best >= 500) progressData.completed.score500 = true;
-    if (best >= 5000) progressData.completed.score5000 = true;
-    progressData.bestRun.score5000 = Math.max(Number(progressData.bestRun.score5000) || 0, Math.min(best, 5000));
+    const lifetimeBest = Math.max(normalBest, hardRecord.score);
+    if (lifetimeBest >= 100) progressData.completed.first100 = true;
+    if (lifetimeBest >= 500) progressData.completed.score500 = true;
+    if (lifetimeBest >= 5000) progressData.completed.score5000 = true;
+    progressData.bestRun.score5000 = Math.max(Number(progressData.bestRun.score5000) || 0, Math.min(lifetimeBest, 5000));
     if (achievementDefs.slice(0, 6).every(item => progressData.completed[item.id])) progressData.completed.allSix = true;
     function skinUnlocked(id) {
       return id === "prism" || (id === "cloud" && !!progressData.completed.first100) ||
@@ -269,12 +292,34 @@
     }
     function renderCollection() {
       renderSkins(); renderAchievements();
-      const bestSkin = skins.find(item => item.id === progressData.bestSkin);
-      const recordText = bestSkin ? `目前最高分由${bestSkin.name}創下。` : best > 0 ? "已有舊版最高分紀錄。" : "尚無最高分紀錄。";
-      collectionNote.textContent = `已選擇${skins.find(item => item.id === selectedSkinId).name}，從下一局開始使用；所有造型共用最高分。${recordText}`;
+      const modeName = selectedModeId === "hard" ? "困難" : "一般";
+      const recordSkinId = selectedModeId === "hard" ? hardRecord.skin : progressData.bestSkin;
+      const bestSkin = skins.find(item => item.id === recordSkinId);
+      const recordText = bestSkin ? `${modeName}模式最高分由${bestSkin.name}創下。` :
+        best > 0 ? `${modeName}模式已有最高分紀錄。` : `${modeName}模式尚無最高分紀錄。`;
+      collectionNote.textContent = `已選擇${skins.find(item => item.id === selectedSkinId).name}，從下一局開始使用；兩種模式分開記錄最高分，成就與造型共用。${recordText}`;
     }
 
     function formatted(value) { return String(value).padStart(4, "0"); }
+    function updateModeButtons() {
+      normalModeButton.setAttribute("aria-pressed", String(selectedModeId === "normal"));
+      hardModeButton.setAttribute("aria-pressed", String(selectedModeId === "hard"));
+    }
+    function chooseMode(id) {
+      if ((state !== "ready" && state !== "over") || (id !== "normal" && id !== "hard") || id === selectedModeId) return;
+      selectedModeId = id;
+      if (state === "ready") activeModeId = id;
+      best = modeBest(id);
+      writeStore("rainbowDino.mode.v1", id);
+      updateModeButtons(); updateHud(); renderCollection();
+    }
+    function naturalMultiplier() {
+      return 1 + (activeModeId === "hard" ? elapsed * .015 : Math.min(1.5, elapsed * .015));
+    }
+    function skillSpeedMultiplier() {
+      return skillActive > 0 && activeSkinId === "prism" ? 1.1 :
+        skillActive > 0 && activeSkinId === "aurora" ? .75 : 1;
+    }
     function updateSkillMeter() {
       const skin = currentSkin();
       const ready = skillCooldown <= 0;
@@ -304,8 +349,16 @@
     function updateHud() {
       scoreEl.textContent = formatted(score);
       bestEl.textContent = formatted(best);
+      bestLabelEl.textContent = `${selectedModeId === "hard" ? "困難" : "一般"}最高分`;
+      speedLabelEl.textContent = `${activeModeId === "hard" ? "困難" : "一般"}速度`;
+      scoreEl.classList.toggle("compact", score >= 100000);
+      scoreEl.classList.toggle("ultra-compact", score >= 1000000);
+      bestEl.classList.toggle("compact", best >= 100000);
+      bestEl.classList.toggle("ultra-compact", best >= 1000000);
       const speedRatio = speed / Math.max(world.baseSpeed, 1);
-      speedEl.textContent = `×${speedRatio > 2.5 ? speedRatio.toFixed(2) : speedRatio.toFixed(1)}`;
+      const speedText = speedRatio < 10 ? (speedRatio > 2.5 ? speedRatio.toFixed(2) : speedRatio.toFixed(1)) :
+        speedRatio < 100 ? speedRatio.toFixed(1) : speedRatio < 1000 ? String(Math.round(speedRatio)) : `${(speedRatio / 1000).toFixed(1)}k`;
+      speedEl.textContent = `×${speedText}`;
       sceneEl.textContent = scenes[sceneIndex].name;
       updateSkillMeter();
     }
@@ -439,7 +492,9 @@
 
     function setOverlay(mode) {
       overlay.hidden = mode === "running";
+      modePicker.hidden = mode !== "ready" && mode !== "over";
       if (mode === "running") return;
+      modePickerLabel.textContent = mode === "over" ? "選擇下一局模式" : "選擇遊戲模式";
       const content = {
         ready: ["⚔", "準備闖蕩江湖了嗎？", "躍過路障、蹲下閃開飛行障礙，穿越四處江湖勝景。", "開始遊戲 →"],
         paused: ["⏸", "先喘口氣", "準備好了就繼續奔跑。", "繼續遊戲 →"],
@@ -452,7 +507,8 @@
       document.getElementById("finalScore").hidden = mode !== "over";
       if (mode === "over") {
         document.getElementById("runScore").textContent = formatted(score);
-        document.getElementById("runBest").textContent = formatted(best);
+        runBestLabel.textContent = `${activeModeId === "hard" ? "困難" : "一般"}模式最高分`;
+        document.getElementById("runBest").textContent = formatted(modeBest(activeModeId));
       }
     }
     function resize() {
@@ -468,7 +524,10 @@
       canvas.width = Math.round(rect.width * pixelRatio);
       canvas.height = Math.round(rect.height * pixelRatio);
       ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      if (state !== "running") speed = world.baseSpeed * (1 + Math.min(1.5, elapsed * .015));
+      if (state !== "running") {
+        naturalSpeed = world.baseSpeed * naturalMultiplier();
+        speed = naturalSpeed * skillSpeedMultiplier();
+      }
       updateHud();
     }
     function resetRun() {
@@ -480,6 +539,7 @@
       runStats = { groundJumped: 0, birdsDucked: 0, passed: 0, skillUses: 0 };
       skillCooldown = 0; skillActive = 0; shieldCharges = 0; doubleJumpUsed = false;
       beamRemaining = 0;
+      activeModeId = selectedModeId; best = modeBest(activeModeId);
       activeSkinId = selectedSkinId;
       naturalSpeed = world.baseSpeed; speed = world.baseSpeed;
       updateHud();
@@ -508,8 +568,14 @@
       stopMusic(true);
       checkAchievements(); saveRunProgress();
       if (score > best) {
-        best = score; progressData.bestSkin = activeSkinId;
-        writeStore("rainbowDino.best.v1", best); saveProgress();
+        best = score;
+        if (activeModeId === "hard") {
+          hardRecord = { score, skin: activeSkinId };
+          writeStore("rainbowDino.hardRecord.v1", JSON.stringify(hardRecord));
+        } else {
+          normalBest = score; progressData.bestSkin = activeSkinId;
+          writeStore("rainbowDino.best.v1", best); saveProgress();
+        }
       }
       updateHud(); renderCollection(); playAudio(hitSound); setOverlay("over");
     }
@@ -573,15 +639,36 @@
       return a.x < b.x + b.width && a.x + a.width > b.x &&
              a.y < b.y + b.height && a.y + a.height > b.y;
     }
+    function obstacleContact(item, oldX, travel, hitbox, jumpBefore, velocityBefore, dt) {
+      const box = obstacleBox(item);
+      const oldLeft = oldX + box.x - item.x;
+      let enter = 0, leave = 0;
+      if (travel > 0) {
+        enter = Math.max(0, (oldLeft - hitbox.x - hitbox.width) / travel);
+        leave = Math.min(1, (oldLeft + box.width - hitbox.x) / travel);
+        if (enter >= leave) return { crossed: false, hit: false };
+      } else if (!overlaps(hitbox, box)) return { crossed: false, hit: false };
+
+      const heightAt = fraction => Math.max(0, jumpBefore + velocityBefore * dt * fraction - 975 * dt * dt * fraction * fraction);
+      let minJump = Math.min(heightAt(enter), heightAt(leave));
+      let maxJump = Math.max(heightAt(enter), heightAt(leave));
+      if (dt > 0) {
+        const peak = velocityBefore / (1950 * dt);
+        if (peak > enter && peak < leave) maxJump = Math.max(maxJump, heightAt(peak));
+      }
+      const playerTop = world.ground - (player.duck ? 29 : 61);
+      const playerBottom = playerTop + (player.duck ? 25 : 56);
+      const hit = maxJump > playerTop - (box.y + box.height) && minJump < playerBottom - box.y;
+      return { crossed: true, hit, minJump };
+    }
     function update(dt) {
       elapsed += dt;
       skillCooldown = Math.max(0, skillCooldown - dt);
       skillActive = Math.max(0, skillActive - dt);
       beamRemaining = Math.max(0, beamRemaining - dt);
       if (skillActive === 0) shieldCharges = 0;
-      naturalSpeed = world.baseSpeed * (1 + Math.min(1.5, elapsed * .015));
-      const skillMultiplier = skillActive > 0 && activeSkinId === "prism" ? 1.1 :
-        skillActive > 0 && activeSkinId === "aurora" ? .75 : 1;
+      naturalSpeed = world.baseSpeed * naturalMultiplier();
+      const skillMultiplier = skillSpeedMultiplier();
       speed = naturalSpeed * skillMultiplier;
       distance += speed * dt;
       progress += speed / world.baseSpeed * dt * 10;
@@ -594,6 +681,7 @@
         sceneFadeRemaining = Math.max(0, sceneFadeRemaining - dt);
         if (sceneFadeRemaining === 0) previousSceneIndex = null;
       }
+      const jumpBefore = player.jump, velocityBefore = player.velocity;
       if (player.velocity !== 0 || player.jump > 0) {
         player.jump += player.velocity * dt;
         player.velocity -= 1950 * dt;
@@ -607,22 +695,24 @@
           spawnTimer = Math.max(1.2, 1.72 - elapsed * .005) + Math.random() * .35;
         }
       }
-      for (const item of obstacles) item.x -= speed * dt;
+      const travel = speed * dt;
       const hitbox = playerBox();
       for (const item of obstacles) {
+        const oldX = item.x;
+        item.x -= travel;
         if (item.neutralized) continue;
-        const horizontalContact = item.x < player.x + 53 && item.x + item.width > player.x + 10;
-        if (horizontalContact && !item.avoidedBy) {
-          if (item.kind !== "bird" && player.jump >= 47) item.avoidedBy = "jump";
-          if (item.kind === "bird" && player.duck) item.avoidedBy = "duck";
-        }
-        if (overlaps(hitbox, obstacleBox(item))) {
+        const contact = obstacleContact(item, oldX, travel, hitbox, jumpBefore, velocityBefore, dt);
+        if (contact.hit) {
           if (shieldCharges > 0 && skillActive > 0 && activeSkinId === "shield") {
             shieldCharges = 0; skillActive = 0; item.neutralized = true;
           } else {
             endGame();
             break;
           }
+        }
+        if (contact.crossed && !item.neutralized && !item.avoidedBy) {
+          if (item.kind !== "bird" && !contact.hit && contact.minJump >= 47) item.avoidedBy = "jump";
+          if (item.kind === "bird" && !contact.hit && player.duck) item.avoidedBy = "duck";
         }
         if (!item.neutralized && !item.passed && item.x + item.width < player.x + 8) {
           item.passed = true; runStats.passed++;
@@ -1621,6 +1711,8 @@
     window.addEventListener("blur", () => { keys.clear(); player.duck = false; pauseGame(); });
     document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });
     mainButton.addEventListener("click", () => state === "over" ? startGame() : action());
+    normalModeButton.addEventListener("click", () => chooseMode("normal"));
+    hardModeButton.addEventListener("click", () => chooseMode("hard"));
     canvas.addEventListener("pointerdown", event => { if (event.pointerType !== "mouse" || event.button === 0) action(); });
     pauseButton.addEventListener("click", () => state === "running" ? pauseGame() : resumeGame());
     musicButton.addEventListener("click", () => {
@@ -1660,5 +1752,5 @@
       saveProgress(); renderCollection();
     });
     window.addEventListener("resize", resize);
-    saveProgress(); updateAudioButtons(); resize(); setOverlay("ready"); renderCollection(); requestAnimationFrame(frame);
+    saveProgress(); updateAudioButtons(); updateModeButtons(); resize(); setOverlay("ready"); renderCollection(); requestAnimationFrame(frame);
   })();

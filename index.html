@@ -107,12 +107,12 @@
       font-size: .84rem; font-weight: 800; pointer-events: none;
     }
     .overlay {
-      position: absolute; z-index: 3; inset: 0; display: grid; place-items: center;
-      padding: 76px 20px 38px; background: linear-gradient(180deg, rgba(12, 35, 33, .1), rgba(12, 35, 33, .69));
+      position: absolute; z-index: 3; inset: 0; display: flex; overflow-y: auto;
+      padding: 20px; background: linear-gradient(180deg, rgba(12, 35, 33, .1), rgba(12, 35, 33, .69));
     }
     [hidden] { display: none !important; }
     .modal {
-      width: min(440px, 100%); padding: clamp(21px, 4vw, 34px); text-align: center;
+      width: min(440px, 100%); margin: auto; padding: clamp(21px, 4vw, 34px); text-align: center;
       border: 1px solid rgba(255, 255, 255, .22); border-radius: 25px;
       background: rgba(22, 45, 42, .93); backdrop-filter: blur(18px);
       box-shadow: 0 20px 60px rgba(2, 4, 22, .3);
@@ -123,6 +123,17 @@
     .final-score { display: flex; justify-content: center; gap: 30px; margin: -4px 0 22px; }
     .final-score span { color: var(--muted); font-size: .78rem; }
     .final-score strong { display: block; color: #fff; font-size: 1.55rem; font-variant-numeric: tabular-nums; }
+    .mode-picker { margin: 0 0 17px; text-align: left; }
+    .mode-picker-label { display: block; margin-bottom: 7px; color: #d4e0d5; font-size: .78rem; font-weight: 800; }
+    .mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .mode-option {
+      min-height: 58px; padding: 9px 11px; border: 1px solid rgba(226, 237, 216, .22);
+      border-radius: 12px; color: #e6f0e6; background: rgba(255, 255, 255, .06); text-align: left;
+    }
+    .mode-option[aria-pressed="true"] { border-color: #d6e7a9; color: #fff4cf; background: rgba(160, 195, 132, .2); box-shadow: inset 0 0 0 1px rgba(214, 231, 169, .18); }
+    .mode-option strong, .mode-option small { display: block; }
+    .mode-option strong { font-size: .85rem; }
+    .mode-option small { margin-top: 2px; font-size: .68rem; color: #c8d7c5; }
     .primary {
       min-width: 178px; min-height: 48px; padding: 10px 25px; border: 0; border-radius: 13px;
       color: #1b3430; background: linear-gradient(105deg, #efd39a, #afd5ad);
@@ -203,6 +214,8 @@
       }
       .score-chip { min-width: 0; padding: 7px 6px; border-radius: 10px; }
       .score-chip strong { font-size: 1rem; }
+      .score-chip strong.compact { font-size: .78rem; }
+      .score-chip strong.ultra-compact { font-size: .68rem; }
       .score-chip small { font-size: .62rem; }
       .speed-chip { min-width: 0; justify-self: start; }
       .skill-badge { width: 100%; padding: 6px 9px; font-size: .67rem; }
@@ -210,7 +223,15 @@
       .skill-remaining { margin-left: auto; }
       .skill-effect { font-size: .64rem; }
       .scene-badge { padding: 6px 9px; font-size: .69rem; }
-      .overlay { padding: 70px 15px 25px; }
+      .overlay { padding: 12px; }
+      .modal { padding: 16px; }
+      .modal-icon { width: 42px; height: 42px; font-size: 1.45rem; }
+      .modal h2 { margin: 8px 0 5px; font-size: 1.4rem; }
+      .modal p { margin-bottom: 11px; font-size: .81rem; line-height: 1.45; }
+      .final-score { gap: 17px; margin: 0 0 12px; }
+      .mode-picker { margin-bottom: 11px; }
+      .mode-option { min-height: 48px; padding: 7px 8px; }
+      .primary { min-height: 44px; }
       .game-tools { padding: 10px; }
       .hint { display: none; }
       .controls { display: flex; }
@@ -255,13 +276,13 @@
         <canvas id="gameCanvas" tabindex="0" aria-label="遊戲畫面，按空白鍵跳躍，按住下方向鍵蹲下"></canvas>
         <div class="scoreboard" aria-label="遊戲資訊">
           <div class="score-chip score-current"><small>目前分數</small><strong id="score">0000</strong></div>
-          <div class="score-chip score-best"><small>最高分</small><strong id="best">0000</strong></div>
+          <div class="score-chip score-best"><small id="bestLabel">一般最高分</small><strong id="best">0000</strong></div>
           <div class="skill-badge ready" id="skillStatus">
             <div class="skill-head"><span id="skillName">凌風身法</span><span class="skill-remaining" id="skillRemaining">可使用</span></div>
             <div class="skill-track" id="skillProgress" role="progressbar" aria-label="技能冷卻進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="冷卻完成，可使用"><span class="skill-fill" id="skillFill"></span></div>
             <div class="skill-effect" id="skillEffect"></div>
           </div>
-          <div class="score-chip speed-chip"><small>速度</small><strong id="speed">×1.0</strong></div>
+          <div class="score-chip speed-chip"><small id="speedLabel">一般速度</small><strong id="speed">×1.0</strong></div>
           <div class="scene-badge" aria-live="polite">場景 · <span id="sceneName">青竹山徑</span></div>
         </div>
         <div class="toast" id="achievementToast" role="status" aria-live="polite" hidden></div>
@@ -272,7 +293,14 @@
             <p id="modalDescription">躍過路障、蹲下閃開飛行障礙，穿越四處江湖勝景。</p>
             <div class="final-score" id="finalScore" hidden>
               <div><span>本次分數</span><strong id="runScore">0</strong></div>
-              <div><span>最高分</span><strong id="runBest">0</strong></div>
+              <div><span id="runBestLabel">一般模式最高分</span><strong id="runBest">0</strong></div>
+            </div>
+            <div class="mode-picker" id="modePicker" role="group" aria-label="遊戲模式選擇">
+              <span class="mode-picker-label" id="modePickerLabel">選擇遊戲模式</span>
+              <div class="mode-options">
+                <button class="mode-option" id="normalModeButton" type="button" aria-pressed="true"><strong>一般模式</strong><small>速度最高 ×2.5</small></button>
+                <button class="mode-option" id="hardModeButton" type="button" aria-pressed="false"><strong>困難模式</strong><small>速度持續上升</small></button>
+              </div>
             </div>
             <button class="primary" id="mainButton" type="button">開始遊戲 →</button>
           </div>
@@ -293,7 +321,7 @@
       <div class="skin-grid" id="skinGrid"></div>
       <h3>八個成就</h3>
       <div class="achievement-grid" id="achievementGrid"></div>
-      <p class="collection-note" id="collectionNote">選擇造型後，從下一局開始使用；所有造型共用最高分。</p>
+      <p class="collection-note" id="collectionNote">選擇造型後，從下一局開始使用；兩種模式各自記錄最高分，成就與造型共用。</p>
     </section>
     <footer class="footer"><p>每 500 分切換場景；右側的 ↑／↓ 提示下一個障礙。</p></footer>
   </main>
